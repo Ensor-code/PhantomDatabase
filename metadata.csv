@@ -1,0 +1,56 @@
+# label,type,units,file
+code hash,keyword,0,header.txt
+path to folder,keyword,0,0
+simulation time,float,s,.ev
+resolution (current),integer,0,header.txt
+particle mass,float,Msol,header.txt
+0,0,0,0
+tmax,float,0,.in
+dtmax,float,0,.in
+nfulldump,integer,0,.in
+0,0,0,0
+eccentricity,float,0,.setup
+semi-major axis,float,au,.setup
+wind mass-loss rate,float,Msol/yr,.in
+init wind velocity,float,km/s,.in
+term wind velocity,float,km/s,wind_1D.dat
+wind inject radius,float,au,.in
+wind temperature,float,K,.in
+0,0,0,0
+iwind_res,integer,0,.in
+wind_sh_spacing,float,0,.in
+0,0,0,0
+primary mass,float,Msol,.setup
+primary Racc,float,Rsol,.setup
+primary Reff,float,Rsol,.setup
+primary Teff,float,K,.setup
+0,0,0,0
+secondary mass,float,Msol,.setup
+secondary Racc,float,Rsol,.setup
+secondary Reff,float,Rsol,.setup
+secondary Teff,float,K,.setup
+0,0,0,0
+icompanion_star,integer,0,.setup
+subst,interger,0,.setup
+tertiary mass,float,Msol,.setup
+tertiary Racc,float,Rsol,.setup
+tertiary Reff,float,Rsol,.setup
+tertiary Teff,float,K,.setup
+0,0,0,0
+wind polytropic index,float,0,.setup
+mean molecular weight,float,0,.in
+icooling,integer,0,.in
+icool_method,integer,0,.in
+excitation_HI,integer,0,.in
+equation of state,integer,0,.in
+outer boundary,float,au,.in
+0,0,0,0
+idust_opacity,integer,0,.in
+isink_radiation,integer,0,.in
+iget_tdust,integer,0,.in
+alpha_rad,float,0,.in
+0,0,0,0
+f_acc,float,0,.in
+Tfloor,float,0,.in
+0,0,0,0
+Publication/reference,keyword,0,0
