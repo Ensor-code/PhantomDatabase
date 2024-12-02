@@ -31,7 +31,7 @@ secondary Reff,float,Rsol,.setup
 secondary Teff,float,K,.setup
 0,0,0,0
 icompanion_star,integer,0,.setup
-subst,interger,0,.setup
+subst,integer,0,.setup
 tertiary mass,float,Msol,.setup
 tertiary Racc,float,Rsol,.setup
 tertiary Reff,float,Rsol,.setup
