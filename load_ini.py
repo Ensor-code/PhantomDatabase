@@ -1,6 +1,7 @@
 """ Functions to read files and return dictionaries for elastic search"""
 
 from typing import Dict, Any
+import numpy as np
 
 def read_csv(file_path: str) -> list:
     """Read csv file
@@ -93,6 +94,19 @@ def LoadSetupData(directory: str, prefix: str, index_definition) -> Dict[str, An
                     label = "semi-major axis"
                 elif label == "wind_gamma" or label == "temp_exponent":
                     label = "wind polytropic index"
+                # For triples
+                elif label == "binary2_a":
+                    label = "semi-major axis thight orbit"
+                elif label == "binary2_e":
+                    label = "eccentricity thight orbit"
+                #quantities that we need for triples but don't want in the setup dictionary
+                elif label =='q2':
+                    q2 = float(value)
+                elif label == "racc2b" or label == "accr2b":
+                    racc2b = float(value)
+                elif label == "racc2a" or label == "accr2a": #for subst=12
+                    racc2a = float(value)
+                
                 # # For triples
                 # elif label == 'secondary_mass': label = 'massComp_ini'
                 # elif label == 'binary2_a' : label = 'sma_in_ini'
@@ -117,12 +131,6 @@ def LoadSetupData(directory: str, prefix: str, index_definition) -> Dict[str, An
                 ):
                     setup[label] = str(value)
 
-                # # For triples
-                # if label == 'q2':
-                #     label = 'massComp_in_ini'
-                #     if label in index_definition:
-                #         setup[label] = float(value)*setup['primary mass']
-
                 # Boolean
                 if label == "icompanion_star":
                     if int(value) == 0:
@@ -139,6 +147,23 @@ def LoadSetupData(directory: str, prefix: str, index_definition) -> Dict[str, An
         print(" ERROR: No %s.setup file found!" % prefix)
         print("")
         sys.exit()
+    
+    if setup["triple_star"]==True:
+        if setup['subst']==11:  
+            #primary mass Mp is divided into m1 and m2, with Mp=m1+m2 and q=m2/m1, so m1=Mp/(1+q)
+            setup["primary mass"]=np.round(float(setup["primary mass"]/(1+q2)),3)
+            #tertiary mass is the original secondary
+            setup["tertiary mass"]=setup["secondary mass"]
+            setup["tertiary Racc"]=setup["secondary Racc"]
+            #secondary mass is m1*q
+            setup["secondary mass"]=np.round(float(setup["primary mass"]*q2),3)
+            setup["secondary Racc"]= racc2b
+
+        elif setup['subst']==12: #primary mass is original primary mass, original secondary is divided into m2 and m3
+            setup["secondary mass"]=np.round(float(setup["secondary mass"]/(1+q2)),3)
+            setup["tertiary mass"]=np.round(float(setup["secondary mass"]*q2),3)
+            setup["secondary Racc"]=racc2a
+            setup["tertiary Racc"]=racc2b
 
     # load the prefix.in file
     try:

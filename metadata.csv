@@ -36,6 +36,9 @@ tertiary mass,float,Msol,.setup
 tertiary Racc,float,Rsol,.setup
 tertiary Reff,float,Rsol,.setup
 tertiary Teff,float,K,.setup
+inclination,float,0.,.setup
+eccentricity thight orbit,float,0,.setup
+semi-major axis thight orbit,float,0,.setup
 0,0,0,0
 wind polytropic index,float,0,.setup
 mean molecular weight,float,0,.in
