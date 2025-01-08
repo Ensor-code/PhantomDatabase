@@ -1,13 +1,10 @@
 # label,type,units,file
+file name,keyword,0,0
 code hash,keyword,0,header.txt
 path to folder,keyword,0,0
 simulation time,float,s,.ev
 resolution (current),integer,0,header.txt
 particle mass,float,Msol,header.txt
-0,0,0,0
-tmax,float,0,.in
-dtmax,float,0,.in
-nfulldump,integer,0,.in
 0,0,0,0
 eccentricity,float,0,.setup
 semi-major axis,float,au,.setup
@@ -31,12 +28,12 @@ secondary Reff,float,Rsol,.setup
 secondary Teff,float,K,.setup
 0,0,0,0
 icompanion_star,integer,0,.setup
-subst,integer,0,.setup
+subst,interger,0,.setup
 tertiary mass,float,Msol,.setup
 tertiary Racc,float,Rsol,.setup
 tertiary Reff,float,Rsol,.setup
 tertiary Teff,float,K,.setup
-inclination,float,0.,.setup
+inclination,float,0,.setup
 eccentricity thight orbit,float,0,.setup
 semi-major axis thight orbit,float,0,.setup
 0,0,0,0
@@ -56,4 +53,5 @@ alpha_rad,float,0,.in
 f_acc,float,0,.in
 Tfloor,float,0,.in
 0,0,0,0
-Publication/reference,keyword,0,0
+Model name,keyword,0,0
+Pubilcation/reference,keyword,0,0
