@@ -46,10 +46,128 @@ def create_mapping(data: list, header: list) -> Dict[str, Any]:
         if meta:
             data_dict[item[0]]["meta"] = meta
     return data_dict
+ 
+def read_model_list(file) -> list:
+    """Read a file containing a list of models
+    Args:
+        file: path to file containing the list of models
+        Returns:
+        List of strings containing the names of the models
+    """
+    with open(file) as f:
+        models = f.readlines()
+    models = [x.strip() for x in models]
+    return models
+
+def query_document(client, index: str, query: str) -> str:
+    """Query the elastic search index to find if the document exists, get the document id if so.
+     Args:
+        client (str): elasticsearch client
+        index (str): elastic search index
+        query (dict): query to search for the document, e.g. model_name
+
+    Returns:
+        id: id of the document in the index, None if the document does not exist
+ """
+    from elasticsearch import Elasticsearch
+    response = client.search(index=index, query={"match": {"Model name": {"query": query}}})
+    if len(response["hits"]["hits"]) > 0:
+        id = response["hits"]["hits"][0]["_id"]
+    else:
+        id = None
+    return id
+
+
+def LoadDoc(directory: str, model, prefix: str, index_definition) -> Dict[str, Any]:
+    """Load document from the files in the simulation directory
+    Args:
+        directory (str): directory of the simulation
+        prefix (str): prefix used for the files
+        index_definition (dict): dictionary containing the mappings for the elastic search index
+
+    Returns:
+        dict: a dictionary containing all the field mappings
+        (!! check units, they are not all in SI or cgs)    
+    """
+    import os
+
+    print("Loading data for model %s" % model)
+    directory = os.path.join(directory, model)
+    
+    # create mappings for the model 
+    modelData = {"Model name": model,
+                 "path to folder": directory}   
+    
+    # get data from the .setup file
+    modelData.update(LoadSetupData(directory, prefix, index_definition))
+
+    # get data from the .in file
+    modelData.update(LoadInData(directory, prefix, index_definition))
+
+    # get data from the wind1D.dat file
+    if prefix == "wind":
+        modelData.update(LoadWindData(directory, prefix, index_definition))
+    
+    return modelData
+
+
+
+def LoadInData(directory: str, prefix: str, index_definition) -> Dict[str, Any]:
+    """Load the .in file to get the required information about the model
+
+    Args:
+        directory (str): directory of the simulation
+        prefix (str): prefix used for the files
+        index_definition (dict): dictionary containing the mappings for the elastic search index
+
+    Returns:
+        dict: a dictionary containing the info from the setup and .in files
+        (!! check units, they are not all in SI or cgs)
+    """
+    import os
+    import sys
+
+    ini = {}
+    # load the prefix.in file
+    try:
+        with open(os.path.join(directory, "%s.in" % prefix), "r") as data:
+            for line in data:
+                if len(line) <= 1 or line.startswith("#"):
+                    # remove empty lines and headers
+                    continue
+                # Get labels and values
+                label, _, value, *_ = line.strip().split()
+
+                # Booleans
+                if value == "F":
+                    value = 0
+
+                # Store variable with the type defined in the index dictionary
+                if (label in index_definition["mappings"]["properties"]) and (
+                    index_definition["mappings"]["properties"][label]["type"] == "float"
+                ):
+                    ini[label] = float(value)
+                elif (label in index_definition["mappings"]["properties"]) and (
+                    index_definition["mappings"]["properties"][label]["type"]
+                    == "integer"
+                ):
+                    ini[label] = int(value)
+                elif (label in index_definition["mappings"]["properties"]) and (
+                    index_definition["mappings"]["properties"][label]["type"]
+                    == "string"
+                ):
+                    ini[label] = str(value)
+    except FileNotFoundError:
+        print("")
+        print(" ERROR: No %s.in file found!" % prefix)
+        print("")
+        sys.exit()
+
+    return ini
 
 
 def LoadSetupData(directory: str, prefix: str, index_definition) -> Dict[str, Any]:
-    """Load the prefix.in and prefix.setup files to get the required information about the phantom model
+    """Load the .setup file to get the required information about the model
 
     Args:
         directory (str): directory of the simulation
@@ -64,7 +182,8 @@ def LoadSetupData(directory: str, prefix: str, index_definition) -> Dict[str, An
     import sys
 
     setup = {}
-    # load the prefix.setup file
+
+    # load the .setup file
     try:
         with open(os.path.join(directory, "%s.setup" % prefix), "r") as data:
             for line in data:
@@ -73,49 +192,14 @@ def LoadSetupData(directory: str, prefix: str, index_definition) -> Dict[str, An
                     continue
                 # Get labels and values
                 label, _, value, *_ = line.strip().split()
-                # Change labels to make them easier to read for the human eye
-                if label == "primary_mass":
-                    label = "primary mass"
-                elif label == "primary_racc":
-                    label = "primary Racc"
-                elif label == "primary_Reff":
-                    label = "primary Reff"
-                elif label == "primary_Teff":
-                    label = "primary Teff"
-                elif label == "secondary_mass":
-                    label = "secondary mass"
-                elif label == "secondary_racc":
-                    label = "secondary Racc"
-                elif label == "secondary_Reff":
-                    label = "secondary Reff"
-                elif label == "secondary_Teff":
-                    label = "secondary Teff"
-                elif label == "semi_major_axis":
-                    label = "semi-major axis"
-                elif label == "wind_gamma" or label == "temp_exponent":
-                    label = "wind polytropic index"
-                # For triples
-                elif label == "binary2_a":
-                    label = "semi-major axis thight orbit"
-                elif label == "binary2_e":
-                    label = "eccentricity thight orbit"
-                #quantities that we need for triples but don't want in the setup dictionary
-                elif label =='q2':
-                    q2 = float(value)
-                elif label == "racc2b" or label == "accr2b":
-                    racc2b = float(value)
-                elif label == "racc2a" or label == "accr2a": #for subst=12
-                    racc2a = float(value)
-                
-                # # For triples
-                # elif label == 'secondary_mass': label = 'massComp_ini'
-                # elif label == 'binary2_a' : label = 'sma_in_ini'
-                # elif label == 'binary2_e' : label = 'ecc_in'
-                # elif label == 'secondary_racc': label = 'rAccrComp'
-                # elif label == 'accr2b' : label = 'rAccrComp_in'
-                # elif label == 'racc2b' : label = 'rAccrComp_in'
 
-                # Store variable with the type stored in the index definition
+                #quantities that we need for triples calculations
+                if label =='q2': q2 = float(value)
+                elif label == "racc2b" or label == "accr2b": racc2b = float(value)
+                elif label == "racc2a" or label == "accr2a": racc2a = float(value) #for subst=12
+                    
+
+                # Store variable with the type defined in the index dictionary
                 if (label in index_definition["mappings"]["properties"]) and (
                     index_definition["mappings"]["properties"][label]["type"] == "float"
                 ):
@@ -130,17 +214,6 @@ def LoadSetupData(directory: str, prefix: str, index_definition) -> Dict[str, An
                     == "string"
                 ):
                     setup[label] = str(value)
-
-                # Boolean
-                if label == "icompanion_star":
-                    if int(value) == 0:
-                        setup["single_star"] = True
-                    else:
-                        setup["single_star"] = False
-                    if int(value) == 2:
-                        setup["triple_star"] = True
-                    else:
-                        setup["triple_star"] = False
 
     except FileNotFoundError:
         print("")
@@ -148,72 +221,58 @@ def LoadSetupData(directory: str, prefix: str, index_definition) -> Dict[str, An
         print("")
         sys.exit()
     
-    if setup["triple_star"]==True:
+    # For triples, get the correct stellar parameters based on the value of subst
+    if setup["icompanion_star"]==2:
         if setup['subst']==11:  
             #primary mass Mp is divided into m1 and m2, with Mp=m1+m2 and q=m2/m1, so m1=Mp/(1+q)
-            setup["primary mass"]=np.round(float(setup["primary mass"]/(1+q2)),3)
+            setup["primary_mass"]=np.round(float(setup["primary_mass"]/(1+q2)),3)
             #tertiary mass is the original secondary
-            setup["tertiary mass"]=setup["secondary mass"]
-            setup["tertiary Racc"]=setup["secondary Racc"]
+            setup["tertiary_mass"]=setup["secondary_mass"]
+            setup["tertiary_racc"]=setup["secondary_racc"]
             #secondary mass is m1*q
-            setup["secondary mass"]=np.round(float(setup["primary mass"]*q2),3)
-            setup["secondary Racc"]= racc2b
+            setup["secondary_mass"]=np.round(float(setup["primary_mass"]*q2),3)
+            setup["secondary_racc"]= racc2b
 
         elif setup['subst']==12: #primary mass is original primary mass, original secondary is divided into m2 and m3
-            setup["secondary mass"]=np.round(float(setup["secondary mass"]/(1+q2)),3)
-            setup["tertiary mass"]=np.round(float(setup["secondary mass"]*q2),3)
-            setup["secondary Racc"]=racc2a
-            setup["tertiary Racc"]=racc2b
-
-    # load the prefix.in file
-    try:
-        with open(os.path.join(directory, "%s.in" % prefix), "r") as data:
-            for line in data:
-                if len(line) <= 1 or line.startswith("#"):
-                    # remove empty lines and headers
-                    continue
-                # Get labels and values
-                label, _, value, *_ = line.strip().split()
-
-                # Change labels to make them easier to read for the human eye
-                if label == "wind_mass_rate":
-                    label = "wind mass rate"
-                elif label == "wind_velocity":
-                    label = "init wind velocity"
-                elif label == "wind_inject_radius":
-                    label = "wind inject radius"
-                elif label == "wind_temperature":
-                    label = "wind temperature"
-                elif label == "mu":
-                    label = "mean molecular weight"
-                elif label == "ieos":
-                    label = "equation of state"
-                elif label == "outer_boundary":
-                    label = "outer boundary"
-
-                # Booleans
-                if value == "F":
-                    value = 0
-
-                # Store variable with the type stored in the index definition
-                if (label in index_definition["mappings"]["properties"]) and (
-                    index_definition["mappings"]["properties"][label]["type"] == "float"
-                ):
-                    setup[label] = float(value)
-                elif (label in index_definition["mappings"]["properties"]) and (
-                    index_definition["mappings"]["properties"][label]["type"]
-                    == "integer"
-                ):
-                    setup[label] = int(value)
-                elif (label in index_definition["mappings"]["properties"]) and (
-                    index_definition["mappings"]["properties"][label]["type"]
-                    == "string"
-                ):
-                    setup[label] = str(value)
-    except FileNotFoundError:
-        print("")
-        print(" ERROR: No %s.in file found!" % prefix)
-        print("")
-        sys.exit()
+            setup["secondary_mass"]=np.round(float(setup["secondary_mass"]/(1+q2)),3)
+            setup["tertiary_mass"]=np.round(float(setup["secondary_mass"]*q2),3)
+            setup["secondary_racc"]=racc2a
+            setup["tertiary_racc"]=racc2b
 
     return setup
+
+def LoadWindData(directory: str, prefix: str, index_definition) -> Dict[str, Any]:
+    """Load the wind1D.data file to get the required information about the model
+
+    Args:
+        directory (str): directory of the simulation
+        prefix (str): prefix used for the files
+        index_definition (dict): dictionary containing the mappings for the elastic search index
+
+    Returns:
+        dict: a dictionary containing the info from the setup and .in files
+    """
+    import os
+    import sys
+
+    cm_to_km = 1e-5
+
+    wind = {}
+    # load the prefix.in file
+    try:
+        with open(os.path.join(directory, "wind1D.dat"), "r") as data:
+            # Get wind terminal velocity
+            line = data.readlines()[-1]
+            wind['wind_terminal_velocity'] = float(line.strip().split()[2])*cm_to_km
+            
+    except FileNotFoundError:
+        try:
+            with open(os.path.join(directory, "windprofile1D.dat"), "r") as data:
+                # Get wind terminal velocity (in km/s, it's in cm/s in the file)
+                line = data.readlines()[-1]
+                wind['wind_terminal_velocity'] = float(line.strip().split()[2])*cm_to_km
+
+        except FileNotFoundError:
+            print("ERROR: No wind1D.data or windprofile1D.dat file found! Skipping wind data -")
+            return
+    return wind

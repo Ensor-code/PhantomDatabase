@@ -1,5 +1,4 @@
 # label,type,units,file
-file name,keyword,0,0
 code hash,keyword,0,header.txt
 path to folder,keyword,0,0
 simulation time,float,s,.ev
@@ -7,43 +6,43 @@ resolution (current),integer,0,header.txt
 particle mass,float,Msol,header.txt
 0,0,0,0
 eccentricity,float,0,.setup
-semi-major axis,float,au,.setup
-wind mass-loss rate,float,Msol/yr,.in
-init wind velocity,float,km/s,.in
-term wind velocity,float,km/s,wind_1D.dat
-wind inject radius,float,au,.in
-wind temperature,float,K,.in
+semi_major_axis,float,au,.setup
+wind_mass_rate,float,Msol/yr,.in
+wind_velocity,float,km/s,.in
+wind_terminal_velocity,float,km/s,wind_1D.dat
+wind_inject_radius,float,au,.in
+wind_temperature,float,K,.in
 0,0,0,0
-iwind_res,integer,0,.in
-wind_sh_spacing,float,0,.in
+iwind_resolution,integer,0,.in
+wind_shell_spacing,float,0,.in
 0,0,0,0
-primary mass,float,Msol,.setup
-primary Racc,float,Rsol,.setup
-primary Reff,float,Rsol,.setup
-primary Teff,float,K,.setup
+primary_mass,float,Msol,.setup
+primary_racc,float,Rsol,.setup
+primary_Reff,float,Rsol,.setup
+primary_Teff,float,K,.setup
 0,0,0,0
-secondary mass,float,Msol,.setup
-secondary Racc,float,Rsol,.setup
-secondary Reff,float,Rsol,.setup
-secondary Teff,float,K,.setup
+secondary_mass,float,Msol,.setup
+secondary_racc,float,Rsol,.setup
+secondary_Reff,float,Rsol,.setup
+secondary_Teff,float,K,.setup
 0,0,0,0
 icompanion_star,integer,0,.setup
-subst,interger,0,.setup
-tertiary mass,float,Msol,.setup
-tertiary Racc,float,Rsol,.setup
-tertiary Reff,float,Rsol,.setup
-tertiary Teff,float,K,.setup
+subst,integer,0,.setup
+tertiary_mass,float,Msol,.setup
+tertiary_racc,float,Rsol,.setup
+tertiary_Reff,float,Rsol,.setup
+tertiary_Teff,float,K,.setup
 inclination,float,0,.setup
-eccentricity thight orbit,float,0,.setup
-semi-major axis thight orbit,float,0,.setup
+binary2_e,float,0,.setup
+binary2_a,float,0,.setup
 0,0,0,0
-wind polytropic index,float,0,.setup
-mean molecular weight,float,0,.in
+wind_gamma,float,0,.setup
+mu,float,0,.in
 icooling,integer,0,.in
 icool_method,integer,0,.in
 excitation_HI,integer,0,.in
-equation of state,integer,0,.in
-outer boundary,float,au,.in
+ieos,integer,0,.in
+outer_boundary,float,au,.in
 0,0,0,0
 idust_opacity,integer,0,.in
 isink_radiation,integer,0,.in
@@ -54,4 +53,4 @@ f_acc,float,0,.in
 Tfloor,float,0,.in
 0,0,0,0
 Model name,keyword,0,0
-Pubilcation/reference,keyword,0,0
+Publication/reference,keyword,0,0
