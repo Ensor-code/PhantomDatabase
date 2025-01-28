@@ -1,5 +1,6 @@
 # label,type,units,file
-code hash,keyword,0,header.txt
+version,keyword,0,header.txt
+date,keyword,0,header.txt
 path to folder,keyword,0,0
 simulation time,float,s,.ev
 resolution (current),integer,0,header.txt
