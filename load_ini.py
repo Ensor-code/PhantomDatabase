@@ -104,6 +104,12 @@ def LoadDoc(directory: str, model, prefix: str, index_definition) -> Dict[str, A
     # get data from the .in file
     modelData.update(LoadInData(directory, prefix, index_definition))
 
+    # get data from the header.txt file
+    modelData.update(LoadHeaderData(directory, prefix, index_definition))
+
+    # get data from the .ev file
+    modelData.update(LoadEvData(directory, prefix, index_definition))
+
     # get data from the wind1D.dat file
     if prefix == "wind":
         modelData.update(LoadWindData(directory, prefix, index_definition))
@@ -143,20 +149,8 @@ def LoadInData(directory: str, prefix: str, index_definition) -> Dict[str, Any]:
                     value = 0
 
                 # Store variable with the type defined in the index dictionary
-                if (label in index_definition["mappings"]["properties"]) and (
-                    index_definition["mappings"]["properties"][label]["type"] == "float"
-                ):
-                    ini[label] = float(value)
-                elif (label in index_definition["mappings"]["properties"]) and (
-                    index_definition["mappings"]["properties"][label]["type"]
-                    == "integer"
-                ):
-                    ini[label] = int(value)
-                elif (label in index_definition["mappings"]["properties"]) and (
-                    index_definition["mappings"]["properties"][label]["type"]
-                    == "string"
-                ):
-                    ini[label] = str(value)
+                if label in index_definition["mappings"]["properties"]:
+                    ini[label] = StoreEntry(index_definition, label, value)
     except FileNotFoundError:
         print("")
         print(" ERROR: No %s.in file found!" % prefix)
@@ -200,20 +194,8 @@ def LoadSetupData(directory: str, prefix: str, index_definition) -> Dict[str, An
                     
 
                 # Store variable with the type defined in the index dictionary
-                if (label in index_definition["mappings"]["properties"]) and (
-                    index_definition["mappings"]["properties"][label]["type"] == "float"
-                ):
-                    setup[label] = float(value)
-                elif (label in index_definition["mappings"]["properties"]) and (
-                    index_definition["mappings"]["properties"][label]["type"]
-                    == "integer"
-                ):
-                    setup[label] = int(value)
-                elif (label in index_definition["mappings"]["properties"]) and (
-                    index_definition["mappings"]["properties"][label]["type"]
-                    == "string"
-                ):
-                    setup[label] = str(value)
+                if label in index_definition["mappings"]["properties"]:
+                    setup[label] = StoreEntry(index_definition, label, value)
 
     except FileNotFoundError:
         print("")
@@ -241,6 +223,114 @@ def LoadSetupData(directory: str, prefix: str, index_definition) -> Dict[str, An
 
     return setup
 
+def LoadHeaderData(directory: str, prefix: str, index_definition) -> Dict[str, Any]:
+    '''Load the header.txt file to get the required information about the model
+    Args:
+        directory: directory of the simulation
+        prefix: prefix used for the files
+        index_definition: dictionary containing the mappings for the elastic search index
+    
+    Returns:
+        dict: a dictionary containing the info from the header.txt file
+    '''
+
+    import os
+    import sys
+
+    header = {}
+
+    try:
+        with open(os.path.join(directory, "header.txt"), "r") as data:
+            for line in data:
+                if len(line) <= 1 \
+                or line.startswith("#") \
+                or line.startswith("::")\
+                or "ERROR" in line:
+                    # remove empty lines, headers and useless lines
+                    continue
+
+                # special workaround for the line with the version field 
+                # that isn't formatted like the others
+                if line.startswith("FT"):
+                    value = line.strip().split()[0]
+                    value = value.strip("FT:")
+                    label = 'version'
+                elif line.startswith("ST"):
+                    value = line.strip().split()[0]
+                    value = value.strip("ST:")
+                    label = 'version'
+
+                else:
+                    # Get labels and values
+                    label, value = line.strip().split()
+                    if 'naparttot' in label:
+                        label = 'resolution (current)'
+                    if 'massoftype' in label \
+                        and float(value) != 0.0 \
+                        and 'particle mass' not in header:
+                        # there are multiple fields in header for particle mass,
+                        # so only store the first one.
+                        # Needs to be refined if we ever use different types
+                        # of particles in the same simulation.
+                        label = 'particle mass'
+
+                # Store variable with the type defined in the index dictionary
+                if label in index_definition["mappings"]["properties"]:
+                    header[label] = StoreEntry(index_definition, label, value)
+            
+    except FileNotFoundError:
+        print("ERROR: No header.txt file found!")
+        sys.exit()
+        return
+    return header
+    
+def LoadEvData(directory: str, prefix: str, index_definition) -> Dict[str, Any]:
+    """Load the .ev file to get the required information about the model
+    Args:
+        directory (str): directory of the simulation
+        prefix (str): prefix used for the files
+        index_definition (dict): dictionary containing the mappings for the elastic search index
+
+    Returns:
+        dict: a dictionary containing the info from the .ev file
+    """
+    import glob
+    import os
+    import sys
+
+    ev = {}
+
+    # find latest .ev file
+    # find all files matching the pattern wind*.ev
+    ev_files = glob.glob( "*.ev",root_dir=directory)
+    if not ev_files:
+        print("ERROR: No *.ev files found!")
+        sys.exit()
+
+    # extract the number from the filenames and find the one with the largest number
+    max_number = -1
+    max_file = None
+    for file in ev_files:
+        try:
+            number = int(file.split(prefix)[1].split(".ev")[0])
+            if number > max_number:
+                max_number = number
+                max_file = file
+        except ValueError:
+            continue
+
+    if max_file is None:
+        print("ERROR: No valid wind*.ev files found!")
+        sys.exit()
+
+    with open(os.path.join(directory, max_file), "r") as data:
+        # everything we need is in the last line
+        line = data.readlines()[-1]
+        ev['simulation time'] = float(line.strip().split()[0])
+            
+    return ev
+
+
 def LoadWindData(directory: str, prefix: str, index_definition) -> Dict[str, Any]:
     """Load the wind1D.data file to get the required information about the model
 
@@ -260,9 +350,10 @@ def LoadWindData(directory: str, prefix: str, index_definition) -> Dict[str, Any
     wind = {}
     # load the prefix.in file
     try:
-        with open(os.path.join(directory, "wind1D.dat"), "r") as data:
-            # Get wind terminal velocity
+        with open(os.path.join(directory, "wind_1D.dat"), "r") as data:
+            # everything we need is in the last line
             line = data.readlines()[-1]
+            # Get wind terminal velocity
             wind['wind_terminal_velocity'] = float(line.strip().split()[2])*cm_to_km
             
     except FileNotFoundError:
@@ -273,6 +364,27 @@ def LoadWindData(directory: str, prefix: str, index_definition) -> Dict[str, Any
                 wind['wind_terminal_velocity'] = float(line.strip().split()[2])*cm_to_km
 
         except FileNotFoundError:
-            print("ERROR: No wind1D.data or windprofile1D.dat file found! Skipping wind data -")
-            return
+            print("ERROR: No wind_1D.data or windprofile1D.dat file found! Some wind data will be missing -")
     return wind
+
+def StoreEntry(index_definition: dict, label:str, value:str):
+    """Store the entry in the elastic search database if it appears in the index_definition.
+    The variable type is then based on the entry type defined in index_definition. 
+    For now only string, integer and float are supported.
+    Args:
+        index_definition (dict): dictionary containing the mappings for the elastic search index
+        label (str): label of the entry
+        value (str): value of the entry
+    """
+    import sys
+
+    # Return variable with the type defined in the index dictionary
+    if index_definition["mappings"]["properties"][label]["type"] == "float":
+        return float(value)
+    elif index_definition["mappings"]["properties"][label]["type"] == "integer":
+        return int(value)
+    elif index_definition["mappings"]["properties"][label]["type"] == "keyword":
+        return str(value)
+    else:
+        sys.exit("ERROR: Entry type " + index_definition["mappings"]["properties"][label]["type"] \
+                 + " not found in index definition. Check metadata.csv.")
