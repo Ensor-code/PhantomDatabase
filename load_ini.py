@@ -3,6 +3,27 @@
 from typing import Dict, Any
 import numpy as np
 
+def calculate_period(semi_major_axis: float, primary_mass: float, secondary_mass: float) -> float:
+    ''' Calculate the period of a binary system from the semi-major axis and the masses of the two stars
+    Args:
+        semi_major_axis: semi-major axis of the binary system, in au
+        primary_mass: mass of the primary star, in Msol
+        secondary_mass: mass of the secondary star, in Msol
+    Returns:
+        period: period of the binary system, in years
+    '''
+    from numpy import pi
+    G = 6.67430e-8 # gravitational constant in cgs
+
+    semi_major_axis = semi_major_axis * 1.496e13 # convert au to cm
+    primary_mass = primary_mass * 1.989e33 # convert Msol to g
+    secondary_mass = secondary_mass * 1.989e33 # convert Msol to g
+    
+    period = 2*pi * np.sqrt(semi_major_axis**3 / (G * (primary_mass+secondary_mass)))
+
+    return period / (3600*24*365.25) # convert seconds to years
+    
+
 def read_csv(file_path: str) -> list:
     """Read csv file
     Args:
@@ -91,7 +112,6 @@ def LoadDoc(directory: str, model, prefix: str, index_definition) -> Dict[str, A
     """
     import os
 
-    print("Loading data for model %s" % model)
     directory = os.path.join(directory, model)
     
     # create mappings for the model 
@@ -105,14 +125,14 @@ def LoadDoc(directory: str, model, prefix: str, index_definition) -> Dict[str, A
     modelData.update(LoadInData(directory, prefix, index_definition))
 
     # get data from the header.txt file
-    modelData.update(LoadHeaderData(directory, prefix, index_definition))
+    modelData.update(LoadHeaderData(directory, index_definition))
 
     # get data from the .ev file
-    modelData.update(LoadEvData(directory, prefix, index_definition))
+    modelData.update(LoadEvData(directory, prefix))
 
     # get data from the wind1D.dat file
     if prefix == "wind":
-        modelData.update(LoadWindData(directory, prefix, index_definition))
+        modelData.update(LoadWindData(directory))
     
     return modelData
 
@@ -148,12 +168,12 @@ def LoadInData(directory: str, prefix: str, index_definition) -> Dict[str, Any]:
                 if value == "F":
                     value = 0
 
-                # Store variable with the type defined in the index dictionary
+                # Store variable with the type defined in the index 
                 if label in index_definition["mappings"]["properties"]:
                     ini[label] = StoreEntry(index_definition, label, value)
     except FileNotFoundError:
         print("")
-        print(" ERROR: No %s.in file found!" % prefix)
+        print(" ERROR: %s No %s.in file found!" % (directory, prefix))
         print("")
         sys.exit()
 
@@ -187,47 +207,62 @@ def LoadSetupData(directory: str, prefix: str, index_definition) -> Dict[str, An
                 # Get labels and values
                 label, _, value, *_ = line.strip().split()
 
-                #quantities that we need for triples calculations
+                #quantities that we need for triples
                 if label =='q2': q2 = float(value)
                 elif label == "racc2b" or label == "accr2b": racc2b = float(value)
+                elif label == "Teff2b": Teff2b = float(value)
+                elif label == "Reff2b": Reff2b = float(value)
                 elif label == "racc2a" or label == "accr2a": racc2a = float(value) #for subst=12
-                    
+                elif label == "Teff2a": Teff2a = float(value) #for subst=12
+                elif label == "Reff2a": Reff2a = float(value) #for subst=12
 
-                # Store variable with the type defined in the index dictionary
+                # Store variable with the type defined in the index
                 if label in index_definition["mappings"]["properties"]:
                     setup[label] = StoreEntry(index_definition, label, value)
 
     except FileNotFoundError:
         print("")
-        print(" ERROR: No %s.setup file found!" % prefix)
+        print(" ERROR: %s No %s.setup file found!" % (directory, prefix))
         print("")
         sys.exit()
+
+    # Some calculated fields for binaries/triples
+    if setup["icompanion_star"] >= 1:
+                setup["mass_ratio"] = float(setup["primary_mass"]/setup["secondary_mass"])
+                setup["period"] = calculate_period(setup["semi_major_axis"], setup["primary_mass"], setup["secondary_mass"])
     
     # For triples, get the correct stellar parameters based on the value of subst
-    if setup["icompanion_star"]==2:
-        if setup['subst']==11:  
+    if setup["icompanion_star"] == 2:
+        if setup['subst'] == 11:  
             #primary mass Mp is divided into m1 and m2, with Mp=m1+m2 and q=m2/m1, so m1=Mp/(1+q)
-            setup["primary_mass"]=np.round(float(setup["primary_mass"]/(1+q2)),3)
+            setup["primary_mass"] = np.round(float(setup["primary_mass"]/(1+q2)),3)
             #tertiary mass is the original secondary
-            setup["tertiary_mass"]=setup["secondary_mass"]
-            setup["tertiary_racc"]=setup["secondary_racc"]
+            setup["tertiary_mass"] = setup["secondary_mass"]
+            setup["tertiary_racc"] = setup["secondary_racc"]
+            setup["tertiary_Teff"] = setup["secondary_Teff"]
+            setup["tertiary_Reff"] = setup["secondary_Reff"]
             #secondary mass is m1*q
-            setup["secondary_mass"]=np.round(float(setup["primary_mass"]*q2),3)
-            setup["secondary_racc"]= racc2b
+            setup["secondary_mass"] = np.round(float(setup["primary_mass"]*q2),3)
+            setup["secondary_racc"] = racc2b
+            setup["secondary_Teff"] = Teff2b
+            setup["secondary_Reff"] = Reff2b
 
         elif setup['subst']==12: #primary mass is original primary mass, original secondary is divided into m2 and m3
-            setup["secondary_mass"]=np.round(float(setup["secondary_mass"]/(1+q2)),3)
-            setup["tertiary_mass"]=np.round(float(setup["secondary_mass"]*q2),3)
-            setup["secondary_racc"]=racc2a
-            setup["tertiary_racc"]=racc2b
+            setup["secondary_mass"] = np.round(float(setup["secondary_mass"]/(1+q2)),3)
+            setup["tertiary_mass"] = np.round(float(setup["secondary_mass"]*q2),3)
+            setup["secondary_racc"] = racc2a
+            setup["tertiary_racc"] = racc2b
+            setup["secondary_Teff"] = Teff2a
+            setup["tertiary_Teff"] = Teff2b
+            setup["secondary_Reff"] = Reff2a
+            setup["tertiary_Reff"] = Reff2b
 
     return setup
 
-def LoadHeaderData(directory: str, prefix: str, index_definition) -> Dict[str, Any]:
+def LoadHeaderData(directory: str, index_definition) -> Dict[str, Any]:
     '''Load the header.txt file to get the required information about the model
     Args:
         directory: directory of the simulation
-        prefix: prefix used for the files
         index_definition: dictionary containing the mappings for the elastic search index
     
     Returns:
@@ -255,15 +290,19 @@ def LoadHeaderData(directory: str, prefix: str, index_definition) -> Dict[str, A
                     value = line.strip().split()[0]
                     value = value.strip("FT:")
                     label = 'version'
+                    # get date
+                    header['model date'] = line.strip().split()[2]
                 elif line.startswith("ST"):
                     value = line.strip().split()[0]
                     value = value.strip("ST:")
                     label = 'version'
+                    header['model date'] = line.strip().split()[2]
 
                 else:
                     # Get labels and values
                     label, value = line.strip().split()
-                    if 'naparttot' in label:
+                    # special cases where fields are not named as in the index
+                    if 'nparttot' in label:
                         label = 'resolution (current)'
                     if 'massoftype' in label \
                         and float(value) != 0.0 \
@@ -274,17 +313,17 @@ def LoadHeaderData(directory: str, prefix: str, index_definition) -> Dict[str, A
                         # of particles in the same simulation.
                         label = 'particle mass'
 
-                # Store variable with the type defined in the index dictionary
+                # Store variable with the type defined in the index
                 if label in index_definition["mappings"]["properties"]:
                     header[label] = StoreEntry(index_definition, label, value)
             
     except FileNotFoundError:
-        print("ERROR: No header.txt file found!")
+        print("ERROR: %s No header.txt file found!"% directory)
         sys.exit()
         return
     return header
     
-def LoadEvData(directory: str, prefix: str, index_definition) -> Dict[str, Any]:
+def LoadEvData(directory: str, prefix: str) -> Dict[str, Any]:
     """Load the .ev file to get the required information about the model
     Args:
         directory (str): directory of the simulation
@@ -304,7 +343,7 @@ def LoadEvData(directory: str, prefix: str, index_definition) -> Dict[str, Any]:
     # find all files matching the pattern wind*.ev
     ev_files = glob.glob( "*.ev",root_dir=directory)
     if not ev_files:
-        print("ERROR: No *.ev files found!")
+        print("ERROR: %s No *.ev files found!"% directory)
         sys.exit()
 
     # extract the number from the filenames and find the one with the largest number
@@ -320,7 +359,7 @@ def LoadEvData(directory: str, prefix: str, index_definition) -> Dict[str, Any]:
             continue
 
     if max_file is None:
-        print("ERROR: No valid wind*.ev files found!")
+        print("ERROR: %s No valid wind*.ev files found!" % directory)
         sys.exit()
 
     with open(os.path.join(directory, max_file), "r") as data:
@@ -331,13 +370,11 @@ def LoadEvData(directory: str, prefix: str, index_definition) -> Dict[str, Any]:
     return ev
 
 
-def LoadWindData(directory: str, prefix: str, index_definition) -> Dict[str, Any]:
+def LoadWindData(directory: str) -> Dict[str, Any]:
     """Load the wind1D.data file to get the required information about the model
 
     Args:
         directory (str): directory of the simulation
-        prefix (str): prefix used for the files
-        index_definition (dict): dictionary containing the mappings for the elastic search index
 
     Returns:
         dict: a dictionary containing the info from the setup and .in files
@@ -364,7 +401,7 @@ def LoadWindData(directory: str, prefix: str, index_definition) -> Dict[str, Any
                 wind['wind_terminal_velocity'] = float(line.strip().split()[2])*cm_to_km
 
         except FileNotFoundError:
-            print("ERROR: No wind_1D.data or windprofile1D.dat file found! Some wind data will be missing -")
+            print("Warning: %s No wind_1D.data or windprofile1D.dat file found! Some wind data will be missing -" % directory)
     return wind
 
 def StoreEntry(index_definition: dict, label:str, value:str):
@@ -388,3 +425,67 @@ def StoreEntry(index_definition: dict, label:str, value:str):
     else:
         sys.exit("ERROR: Entry type " + index_definition["mappings"]["properties"][label]["type"] \
                  + " not found in index definition. Check metadata.csv.")
+        
+def CheckEntries(model:str, entries: dict):
+    '''Check if all the entries in the modelData are correctly filled.
+    Args:
+        index_definition: dictionary containing the mappings for the elastic search index
+        modelData: dictionary containing the data for the model
+    '''
+    import sys
+    # Mandatory fields
+    for key in ['version', 'model date', 
+                'path to folder', 'simulation time', 
+                'resolution (current)', 'particle mass', 
+                'ieos', 'Model name', 'isink_radiation']:
+        if key not in entries:
+                print("%s : \n Entry %s not in model data, but required." % (model, key))
+
+    # equation of state entries
+    if entries['ieos'] == 2:
+        for key in ['mu']:
+            if key not in entries:
+                print("%s : \n Entry %s not in model data, but required by adiabatic EoS" % (model, key))
+
+    # optional entries linked to special implementations in Phantom
+    if entries['icompanion_star']>=1:
+        # Check that binary parameters are all filled
+        for key in ['eccentricity', 'semi_major_axis',
+                    'primary_mass', 'primary_racc',
+                    'primary_Reff', 'primary_Teff',
+                    'secondary_mass', 'secondary_racc',
+                    'secondary_Reff', 'secondary_Teff',
+                    'mass_ratio', 'period']:
+            if key not in entries:
+                print("%s : \n Entry %s not in model data, but required by binaries/triples" % (model, key))
+        # Check that triples parameters are all filled
+        if entries['icompanion_star']==2:
+            for key in ['tertiary_mass', 'tertiary_racc',
+                        'tertiary_Reff', 'tertiary_Teff',
+                        'inclination', 'subst',
+                        'binary2_e', 'binary2_a']:
+                if key not in entries:
+                    print("%s : \n Entry %s not in model data, but required by triples" % (model, key))
+    
+    if entries['wind_mass_rate']==1:
+        # Check that wind parameters are all filled
+        for key in ['wind_gamma', 'wind_velocity',
+                    'wind_inject_radius', 'wind_temperature',
+                    'wind_shell_spacing', 'iwind_resolution']:
+            if key not in entries:
+                print("%s : \n Entry %s not in modelData, but required by wind" % (model, key))
+    
+    if entries['icooling'] != 0:
+        # Check that cooling parameters are all filled
+        for key in ['icool_method', 'excitation_HI','Tfloor']:
+            if key not in entries:
+                print("%s : \n, Entry %s not in modelData, but required by cooling" % (model, key))
+
+    if entries['idust_opacity'] != 0:
+        # Check that dust parameters are all filled - placeholder
+        for key in ['iget_tdust']:
+            if key not in entries:
+                print("%s : \n Entry %s not in modelData, but required by dust" % (model, key))
+
+
+

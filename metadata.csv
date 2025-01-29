@@ -1,6 +1,6 @@
 # label,type,units,file
 version,keyword,0,header.txt
-date,keyword,0,header.txt
+model date,keyword,0,header.txt
 path to folder,keyword,0,0
 simulation time,float,s,.ev
 resolution (current),integer,0,header.txt
@@ -26,6 +26,8 @@ secondary_mass,float,Msol,.setup
 secondary_racc,float,Rsol,.setup
 secondary_Reff,float,Rsol,.setup
 secondary_Teff,float,K,.setup
+mass_ratio,float,0,0
+period,float,yr,0
 0,0,0,0
 icompanion_star,integer,0,.setup
 subst,integer,0,.setup
