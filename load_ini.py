@@ -137,7 +137,6 @@ def LoadDoc(directory: str, model, prefix: str, index_definition) -> Dict[str, A
     return modelData
 
 
-
 def LoadInData(directory: str, prefix: str, index_definition) -> Dict[str, Any]:
     """Load the .in file to get the required information about the model
 
@@ -228,7 +227,7 @@ def LoadSetupData(directory: str, prefix: str, index_definition) -> Dict[str, An
 
     # Some calculated fields for binaries/triples
     if setup["icompanion_star"] >= 1:
-                setup["mass_ratio"] = float(setup["primary_mass"]/setup["secondary_mass"])
+                setup["mass_ratio"] = float(setup["secondary_mass"]/setup["primary_mass"])
                 setup["period"] = calculate_period(setup["semi_major_axis"], setup["primary_mass"], setup["secondary_mass"])
     
     # For triples, get the correct stellar parameters based on the value of subst
