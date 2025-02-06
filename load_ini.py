@@ -48,10 +48,12 @@ def read_csv(file_path: str) -> list:
 def create_mapping(data: list, header: list) -> Dict[str, Any]:
     """Create dictionary for db mappings
     Args:
-        data: list of lists of len(4) containing each mapping's label and the
+        data: list of lists of len(5) containing each mapping's label and the
         corresponding metadata.
         First element of each list is the label, second is the type of variable stored,
-        third and fourth are the units and file storing the information (both can be 0)
+        third is the format (blank for most, only used for date for now)
+        fourth and fifth are the units and file storing the information (both can be 0),
+        
     Returns:
         Dictionary containing the mapping labels and metadata
     """
@@ -59,9 +61,12 @@ def create_mapping(data: list, header: list) -> Dict[str, Any]:
     for item in data:
         # add field label
         data_dict[item[0]] = {"type": item[1]}
+        # if the filed comes with format, add it
+        if item[2] != "0":
+            data_dict[item[0]]["format"] = item[2]
         # if the field comes with metadata, add it
         meta = {}
-        for i in range(2, len(item)):
+        for i in range(3, len(item)):
             if item[i] != "0":
                 meta[header[i]] = item[i]
         if meta:
@@ -289,13 +294,16 @@ def LoadHeaderData(directory: str, index_definition) -> Dict[str, Any]:
                     value = line.strip().split()[0]
                     value = value.strip("FT:")
                     label = 'version'
-                    # get date
-                    header['model date'] = line.strip().split()[2]
+                    # get date and reformat it
+                    date = line.strip().split()[2].split("/")
+                    header['model date'] = date[2] + "-" + date[1] + "-" + date[0]
                 elif line.startswith("ST"):
                     value = line.strip().split()[0]
                     value = value.strip("ST:")
                     label = 'version'
-                    header['model date'] = line.strip().split()[2]
+                    # get date and reformat it
+                    date = line.strip().split()[2].split("/")
+                    header['model date'] = date[2] + "-" + date[1] + "-" + date[0]
 
                 else:
                     # Get labels and values
@@ -420,6 +428,8 @@ def StoreEntry(index_definition: dict, label:str, value:str):
     elif index_definition["mappings"]["properties"][label]["type"] == "integer":
         return int(value)
     elif index_definition["mappings"]["properties"][label]["type"] == "keyword":
+        return str(value)
+    elif index_definition["mappings"]["properties"][label]["type"] == "date":
         return str(value)
     else:
         sys.exit("ERROR: Entry type " + index_definition["mappings"]["properties"][label]["type"] \
