@@ -168,13 +168,13 @@ with list:
     with col2_:
         if st.button(
             "Show models",
-            help="Check to display list of models with snapshots. \n" \
+            help="Check to display the list of models with snapshots. \n" \
             + " This may hinder performances for large queries, use at your own risks."
         ):
             on_click = st.session_state["display"] = True
     with col3_:
         if st.button("Hide models",
-                     help="Check to hide list of models with snapshots. \n"):
+                     help="Check to hide the list of models with snapshots. \n"):
             st.session_state["display"] = False
     with col4_:
         pass
