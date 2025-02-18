@@ -1,0 +1,3 @@
+# publication,model_name
+test,icompstar_2_subst_11_m1_1.6_aIn_5.0_eIn_0.0_m2_0.4_racc2_0.04_a_30.0_e_0.3_gamma_1.2_m3_1.5_racc3_0.04_eos_2_mu_2.381_icooling_1_icoolmeth_0_HIexcit_1_Tfloor_0.0_f_acc_0.8_vw_8.0_Rinj_1.2_mlr_1.1e-06_Tw_1500.0_iwr_4_wss_0.8_bound_1000.0
+test,icompstar_2_subst_11_m1_1.6_aIn_5.0_eIn_0.0_m2_0.4_racc2_0.04_a_35.0_e_0.0_gamma_1.2_m3_0.1_racc3_0.04_eos_2_mu_1.26_icooling_1_icoolmeth_0_HIexcit_1_Tfloor_0.0_f_acc_0.8_vw_15.0_Rinj_1.2_mlr_1.1e-06_Tw_3000.0_iwr_4_wss_1.0_bound_1500.0

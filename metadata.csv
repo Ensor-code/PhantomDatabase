@@ -56,4 +56,4 @@ f_acc,float,0,0,.in
 Tfloor,float,0,0,.in
 0,0,0,0,0
 Model name,keyword,0,0,0
-Publication/reference,keyword,0,0,0
+Publication,keyword,0,0,0
