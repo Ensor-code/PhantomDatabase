@@ -1,7 +1,6 @@
 """ Functions to read files and return dictionaries for elastic search"""
 
 from typing import Dict, Any
-import numpy as np
 
 def calculate_period(semi_major_axis: float, primary_mass: float, secondary_mass: float) -> float:
     ''' Calculate the period of a binary system from the semi-major axis and the masses of the two stars
@@ -12,14 +11,14 @@ def calculate_period(semi_major_axis: float, primary_mass: float, secondary_mass
     Returns:
         period: period of the binary system, in years
     '''
-    from numpy import pi
+    import numpy as np
     G = 6.67430e-8 # gravitational constant in cgs
 
     semi_major_axis = semi_major_axis * 1.496e13 # convert au to cm
     primary_mass = primary_mass * 1.989e33 # convert Msol to g
     secondary_mass = secondary_mass * 1.989e33 # convert Msol to g
     
-    period = 2*pi * np.sqrt(semi_major_axis**3 / (G * (primary_mass+secondary_mass)))
+    period = 2*np.pi * np.sqrt(semi_major_axis**3 / (G * (primary_mass+secondary_mass)))
 
     return period / (3600*24*365.25) # convert seconds to years
     
@@ -198,6 +197,8 @@ def LoadSetupData(directory: str, prefix: str, index_definition) -> Dict[str, An
     """
     import os
     import sys
+
+    import numpy as np
 
     setup = {}
 
