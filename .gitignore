@@ -1,1 +1,7 @@
 .env
+.db
+dashboard/vega
+dashboard/__pycache__/
+__pycache__/
+logistics/moveup.sh
+.DS_Store
