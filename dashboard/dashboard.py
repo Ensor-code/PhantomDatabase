@@ -173,8 +173,9 @@ with list:
         ):
             on_click = st.session_state["display"] = True
     with col3_:
-        if st.button("Hide models",
-                     help="Check to hide the list of models with snapshots. \n"):
+        if st.button(
+                "Hide models",
+                help="Check to hide the list of models with snapshots. \n"):
             st.session_state["display"] = False
     with col4_:
         pass

@@ -263,18 +263,6 @@ def scatterplot(data, x, y, size, color, hover_name, opacity,
     return fig
 
 
-def flip():
-    """
-    flip the state of the display based on check_display 
-    """
-    import streamlit as st
-
-    if st.session_state["check_display"]:
-        st.session_state["display"] = True
-    else:
-        st.session_state["display"] = False
-
-
 def remove_upper_padding():
     '''
     Uses CSS to remove padding at the top of the page
