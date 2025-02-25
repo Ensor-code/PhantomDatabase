@@ -32,6 +32,9 @@ client = Elasticsearch("https://localhost:9200/",
                        api_key=os.getenv('API_KEY'),
                        verify_certs=False)
 
+# CSV path to provide details on the index mappings
+csv_path = "/Users/camille/Documents/PhantomDatabase/metadata.csv"
+
 # Define data labels needed for dataframe
 # format is -> {elastic_field_name: "Label to display"}
 dlabels = {
@@ -152,13 +155,29 @@ with home:
     st.header("Hi")
     st.write("We can add more information here later on.\n")
     st.image("/Users/camille/Pictures/loop.jpg", width=600)
+    with st.expander("More information on the parameters stored in the database"):
+        st.write("Here are the field name, the type of field (int, float, etc.), its format, units, and the file it is obtained from, if applicable.")
+        with open(csv_path, "r") as csvfile:
+            for lines in csvfile:
+                if lines.startswith("#") or lines.startswith("0"):
+                    continue
+                cell1, cell2 = lines.strip().split(",#,")
+                line = cell1.split(",")
+                string = f"- :orange[{line[0]}:]"
+                for s in line[1:]:
+                    if s != "0":
+                        string+=f" {s},"
+                string = string.strip(",")
+                if cell2 != "0":
+                    string+= "\n\n" +f"   {cell2.strip('"')}"
+                st.write(string.strip(","))
 
 with list:
     st.header("List of models")
     st.write("Here is a list of the models you queried. To prevent performance issues, the list is " \
-             + "hidden by default. You can display/hiding by using the buttons below.")
+             + "hidden by default. You can display/hide the list by using the buttons below.")
 
-    st.write("For each model, we display important parameters, as well as snapshots of the model"\
+    st.write("For each model, we display orbital parameters, as well as snapshots of the model"\
              + "in the equatorial (xy) plane, showing a broad view and a close up view of the system.")
 
     # show models buttons

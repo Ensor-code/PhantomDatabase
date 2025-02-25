@@ -76,25 +76,38 @@ def update_results(results):
             # Details arranged in columns
             col1_, col2_, col3_ = st.columns([1, 1, 1])
             # search button
-            with col1_:
-                if result_item['icompanion_star'] > 0:
-                    # binary parameters
-                    st.write(
-                        f"Eccentricity: {result_item['eccentricity']}, " +
-                        f"Mass ratio: {round(result_item['mass_ratio'],2)}, " +
-                        f"Semi-major axis: {result_item['semi_major_axis']} AU, "
-                        + f"Period: {round(result_item['period'], 2)} yrs")
-                    try:
-                        st.write(
-                            f" Wind terminal velocity: {result_item['wind_terminal_velocity']} km/s"
-                        )
-                    except:
-                        st.write(" Wind terminal velocity: Not available")
-                    f" Wind mass loss rate: {result_item['wind_mass_rate']} Msun/yr"
+            with col1_:            
                 # basic model info
                 st.markdown(
                     f"{result_item['icompanion_star']} companion(s), version {result_item['version']}"
                 )
+                if result_item['icompanion_star'] == 1:
+                    # binary parameters
+                    st.write(f"Binary parameters: e={result_item['eccentricity']}, q={round(result_item['mass_ratio'],2)},"
+                             + f" a={round(result_item['semi_major_axis'],2)} AU, P={round(result_item['period'],2)} days"
+                             )
+                elif result_item['icompanion_star'] == 2:
+                    if result_item['subst'] == 11:
+                        st.write(f"Wide binary: e={result_item['eccentricity']}, q={round(result_item['mass_ratio'],2)}, i={result_item['inclination']},"
+                                + f" a={round(result_item['semi_major_axis'],2)} AU, P={round(result_item['period'],2)} days"
+                                )
+                        st.write(f"Tight binary (M1 and M2): e={result_item['binary2_e']}, q={round(result_item['secondary_mass']/result_item['primary_mass'],2)},"
+                                + f" a={round(result_item['binary2_a'],2)} AU, P={round(result_item['binary2_p'],2)} days"
+                                )
+                    elif result_item['subst'] == 12:
+                        st.write(f"Wide binary: e={result_item['eccentricity']}, q={round(result_item['mass_ratio'],2)}, i={result_item['inclination']},"
+                                + f" a={round(result_item['semi_major_axis'],2)} AU, P={round(result_item['period'],2)} days"
+                                )
+                        st.write(f"Tight binary (M2 and M3): e={result_item['binary2_e']}, q={round(result_item['tertiary_mass']/result_item['secondary_mass'],2)},"
+                                + f" a={round(result_item['binary2_a'],2)} AU, P={round(result_item['binary2_p'],2)} days"
+                                )
+                try:
+                    st.write(
+                        f" Wind terminal velocity: {round(result_item['wind_terminal_velocity'],2)} km/s"
+                    )
+                except:
+                    st.write(" Wind terminal velocity: Not available")
+                f" Wind mass loss rate: {result_item['wind_mass_rate']} Msun/yr"
                 try:
                     st.markdown(f"Published in {result_item['Publication']}")
                 except:
@@ -103,6 +116,7 @@ def update_results(results):
                 timestamp = result_item.get('model date', '')
                 if timestamp:
                     st.write(f"ran on {timestamp}")
+
             with col2_:
                 st.markdown(
                     f"<p align=center> Equatorial slice (XY plane) </p>",
@@ -128,8 +142,14 @@ def update_results(results):
                     f" <p align=center> not available </p>",
                     unsafe_allow_html=True)
 
-            st.write("---")
+            with st.expander("More details", icon='🔥'):
+                    st.write('Here are all the model parameters stored in the database:')
+                    st.write('(see the home page for more details on the meaning and units of each parameter)')
+                    for key, value in result_item.items():
+                        st.write(f"**{key}**: {value}")
 
+            st.write("---")
+                    
     except Exception as e:
         st.markdown(f"{result_item} ")
         st.error(f"Error performing search in Elasticsearch: {e}")
