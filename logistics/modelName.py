@@ -13,7 +13,7 @@ CSV_NAME = "modelName.csv"    # contains all the parameters we include in the ne
 DIR_MODEL='/Users/camille/Documents/runs/phantom/database/wind'
 
 # Directory where you want to copy or move your models to
-DIR_DEST = '/Users/camille/Documents/runs/phantom/database/wind2'
+DIR_DEST = '/Users/camille/Documents/runs/phantom/database/windNew'
 
 def main():
     # grab mappings list from the csv file, which should be in the same directory as the script
@@ -138,7 +138,7 @@ def make_name(labels, directory, prefix):
     for key,value in name.items():
         string += f'{key}_{value}_'
 
-    return string
+    return string.strip('_')
 
 
 def search_dir(loc, prefix, minDumpFiles=20):
@@ -160,7 +160,7 @@ def search_dir(loc, prefix, minDumpFiles=20):
     return sorted(result)
 
 
-def copy_dir(DIR,MODELS,PREFIX,DATABASEDIR,labels, verbose=False):
+def copy_dir(old_dir,MODELS,PREFIX,new_dir,labels, verbose=False):
     '''
     copy the model directories to the database directory
     '''
@@ -170,16 +170,22 @@ def copy_dir(DIR,MODELS,PREFIX,DATABASEDIR,labels, verbose=False):
     duplicates=[]
     failed=[]    
 
+    # check if new_dir exists
+    if os.path.isdir(new_dir)==False:
+        if verbose:
+            print('Database directory does not exist:',new_dir)
+        os.system(f'mkdir {new_dir}')
+
     for model in MODELS:
         # check if the model directory exists
-        if os.path.isdir(os.path.join(DIR,model))==False:
+        if os.path.isdir(os.path.join(old_dir,model))==False:
             if verbose:
-                print('Model directory does not exist:',os.path.join(DIR,model))
+                print('Model directory does not exist:',os.path.join(old_dir,model))
             failed.append((model,'directory does not exist'))
             continue
 
         # get the model name
-        name=make_name(labels,os.path.join(DIR,model),PREFIX)
+        name=make_name(labels,os.path.join(old_dir,model),PREFIX)
         if name==None:
             if verbose:
                 print('Could not make name for model:',model)
@@ -187,20 +193,20 @@ def copy_dir(DIR,MODELS,PREFIX,DATABASEDIR,labels, verbose=False):
             continue
 
         # check if the model directory is already in the database directory
-        if os.path.isdir(os.path.join(DATABASEDIR,name))==True:
+        if os.path.isdir(os.path.join(new_dir,name))==True:
             # check if dir is empty
-            if os.listdir(os.path.join(DATABASEDIR,name)):
+            if os.listdir(os.path.join(new_dir,name)):
                 if verbose:
                     print('Model already has files in database directory:',model)
                     print('copies are made with rsync so the existing files are not overwritten')
             duplicates.append((model, name))
         else:
             # make directory in database directory
-            os.system(f'mkdir {DATABASEDIR}/{name}')
+            os.system(f'mkdir {new_dir}/{name}')
         # copy the model directory to the database directory
         print('Copying model:',model)
         try:
-            os.system(f'rsync -ac {DIR}/{model}/* {DATABASEDIR}/{name}')
+            os.system(f'rsync -ac {old_dir}/{model}/* {new_dir}/{name}')
             success.append((model,name))
         except:
             if verbose:
