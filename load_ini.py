@@ -374,8 +374,10 @@ def LoadEvData(directory: str, prefix: str) -> Dict[str, Any]:
 
     with open(os.path.join(directory, max_file), "r") as data:
         # everything we need is in the last line
+        cu_to_yr = 0.15916423881616068 # according to splash units (code units are set such that G=1)
+
         line = data.readlines()[-1]
-        ev['simulation time'] = float(line.strip().split()[0])
+        ev['simulation time'] = float(line.strip().split()[0]) * cu_to_yr
             
     return ev
 

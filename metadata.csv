@@ -4,7 +4,7 @@ Publication,keyword,0,0,0,#,0
 version,keyword,0,0,header.txt,#,Version of Phantom used to run the model
 model date,date,yyyy-MM-dd,0,header.txt,#,Date at which the model was ran
 path to folder,keyword,0,0,0,#,Path at which the model can be found
-simulation time,float,0,s,.ev,#,Time spanned by the simulation
+simulation time,float,0,yr,.ev,#,Time spanned by the simulation
 resolution (current),integer,0,0,header.txt,#,Number of particles at the latest dump
 particle mass,float,0,Msol,header.txt,#,Mass of particles (fixed throughout the simulation)
 0,0,0,0,0,#,0
