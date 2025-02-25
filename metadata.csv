@@ -1,59 +1,58 @@
-# label,type,format,units,file
-version,keyword,0,0,header.txt
-model date,date,yyyy-MM-dd,0,header.txt
-path to folder,keyword,0,0,0
-simulation time,float,0,s,.ev
-resolution (current),integer,0,0,header.txt
-particle mass,float,0,Msol,header.txt
-0,0,0,0,0
-eccentricity,float,0,0,.setup
-semi_major_axis,float,0,au,.setup
-wind_mass_rate,float,0,Msol/yr,.in
-wind_velocity,float,0,km/s,.in
-wind_terminal_velocity,float,0,km/s,wind_1D.dat
-wind_inject_radius,float,0,au,.in
-wind_temperature,float,0,K,.in
-0,0,0,0,0
-iwind_resolution,integer,0,0,.in
-wind_shell_spacing,float,0,0,.in
-0,0,0,0,0
-primary_mass,float,0,Msol,.setup
-primary_racc,float,0,Rsol,.setup
-primary_Reff,float,0,Rsol,.setup
-primary_Teff,float,0,K,.setup
-0,0,0,0,0
-secondary_mass,float,0,Msol,.setup
-secondary_racc,float,0,Rsol,.setup
-secondary_Reff,float,0,Rsol,.setup
-secondary_Teff,float,0,K,.setup
-mass_ratio,float,0,0,0
-period,float,0,yr,0
-0,0,0,0,0
-icompanion_star,integer,0,0,.setup
-subst,integer,0,0,.setup
-tertiary_mass,float,0,Msol,.setup
-tertiary_racc,float,0,Rsol,.setup
-tertiary_Reff,float,0,Rsol,.setup
-tertiary_Teff,float,0,K,.setup
-inclination,float,0,0,.setup
-binary2_e,float,0,0,.setup
-binary2_a,float,0,0,.setup
-0,0,0,0,0
-wind_gamma,float,0,0,.setup
-mu,float,0,0,.in
-icooling,integer,0,0,.in
-icool_method,integer,0,0,.in
-excitation_HI,integer,0,0,.in
-ieos,integer,0,0,.in
-outer_boundary,float,0,au,.in
-0,0,0,0,0
-idust_opacity,integer,0,0,.in
-isink_radiation,integer,0,0,.in
-iget_tdust,integer,0,0,.in
-alpha_rad,float,0,0,.in
-0,0,0,0,0
-f_acc,float,0,0,.in
-Tfloor,float,0,0,.in
-0,0,0,0,0
-Model name,keyword,0,0,0
-Publication,keyword,0,0,0
+# label,type,format,units,file,,
+Model name,keyword,0,0,0,#,0
+Publication,keyword,0,0,0,#,0
+version,keyword,0,0,header.txt,#,Version of Phantom used to run the model
+model date,date,yyyy-MM-dd,0,header.txt,#,Date at which the model was ran
+path to folder,keyword,0,0,0,#,Path at which the model can be found
+simulation time,float,0,s,.ev,#,Time spanned by the simulation
+resolution (current),integer,0,0,header.txt,#,Number of particles at the latest dump
+particle mass,float,0,Msol,header.txt,#,Mass of particles (fixed throughout the simulation)
+0,0,0,0,0,#,0
+primary_mass,float,0,Msol,.setup,#,Mass of primary star
+primary_racc,float,0,au,.setup,#,Accretion radius of primary star
+primary_Reff,float,0,au,.setup,#,Effective radius of primary star
+primary_Teff,float,0,K,.setup,#,Effective temperature of primary star
+0,0,0,0,0,0,0
+icompanion_star,integer,0,0,.setup,#,Number of companions to the primary star
+secondary_mass,float,0,Msol,.setup,#,Mass of secondary star
+secondary_racc,float,0,au,.setup,#,Accretion radius of secondary star
+secondary_Reff,float,0,au,.setup,#,Effective radius of secondary star
+secondary_Teff,float,0,K,.setup,#,Effective temperature of secondary star
+eccentricity,float,0,0,.setup,#,0
+semi_major_axis,float,0,au,.setup,#,0
+mass_ratio,float,0,0,0,#,0
+period,float,0,yr,0,#,0
+0,0,0,0,0,#,0
+subst,integer,0,0,.setup,#,"Triple system configuration. 11 refers to a  system centered around a tight binary orbited by a third star, and 12 is centered around a primary star orbited by a tight binary."
+tertiary_mass,float,0,Msol,.setup,#,Mass of third star
+tertiary_racc,float,0,au,.setup,#,Accretion radius of third star
+tertiary_Reff,float,0,au,.setup,#,Effective radius of third star
+tertiary_Teff,float,0,K,.setup,#,Effective temperature of third star
+inclination,float,0,0,.setup,#,Inclination of second orbit with respect to the first orbit
+binary2_e,float,0,0,.setup,#,Eccentricity of the second orbit
+binary2_a,float,0,au,.setup,#,Semi-major axis of the second orbit
+binary2_p,float,0,yr,0,#,Period of the second orbit
+0,0,0,0,0,#,0
+wind_mass_rate,float,0,Msol/yr,.in,#,Wind mass loss rate
+wind_velocity,float,0,km/s,.in,#,Wind velocity at injection
+wind_terminal_velocity,float,0,km/s,wind_1D.dat,#,Terminal velocity t latest dump file
+wind_inject_radius,float,0,au,.in,#,Radius at which the wind particles are injected
+wind_temperature,float,0,K,.in,#,Wind temperature at injection point
+wind_gamma,float,0,0,.setup,#,Polytropic index of wind
+iwind_resolution,integer,0,0,.in,#,Controls the number of particles on shell
+wind_shell_spacing,float,0,0,.in,#,Ratio of shell spacing to particle spacing
+0,0,0,0,0,0,0
+mu,float,0,0,.in,#,Mean molecular weight
+ieos,integer,0,0,.in,#,Equation of state (1=isoth;2=adiab;3=locally iso;8=barotropic)
+icooling,integer,0,0,.in,#,"Cooling function (0=off, 1=explicit, 2=Townsend table, 3=Gammie, 5=KI02)"
+icool_method,integer,0,0,.in,#,"Cooling integration method (0=implicit, 1=explicit, 2=exact solution)"
+excitation_HI,integer,0,0,.in,#,Cooling via electron excitation of HI (1=on/0=off)
+Tfloor,float,0,0,.in,#,Temperature floor
+outer_boundary,float,0,au,.in,#,Radius after which particles are deleted
+0,0,0,0,0,#,0
+idust_opacity,integer,0,0,.in,#,"Compute dust opacity (0=off,1 (bowen), 2 (nucleation))"
+isink_radiation,integer,0,0,.in,#,"Sink radiation pressure method (0=off,1=alpha,2=dust,3=alpha+dust)"
+iget_tdust,integer,0,0,.in,#,0
+alpha_rad,float,0,0,.in,#,Fraction of the gravitational acceleration imparted to the gas
+0,0,0,0,0,#,0
+f_acc,float,0,0,.in,#,Particles < f_acc*h_acc accreted without checks

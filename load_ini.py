@@ -32,15 +32,16 @@ def read_csv(file_path: str) -> list:
     """
     data = []
     with open(file_path, "r") as csvfile:
-        for line in csvfile:
-            if line.startswith("#"):
+        for lines in csvfile:
+            if lines.startswith("#"):
                 # get header
-                header = line[1:].strip().split(",")
-                continue
-            if line.startswith("0"):
+                header = lines[1:].strip().strip(',').split(",")
+            elif lines.startswith("0"):
                 # skip separation lines
                 continue
-            data.append(line.strip().split(","))
+            else:
+                line = lines.strip().split(",#,")[0]
+                data.append(line.strip().split(","))
     return data, header
 
 
@@ -238,6 +239,7 @@ def LoadSetupData(directory: str, prefix: str, index_definition) -> Dict[str, An
     
     # For triples, get the correct stellar parameters based on the value of subst
     if setup["icompanion_star"] == 2:
+        setup["binary2_p"] = calculate_period(setup["binary2_a"], setup["primary_mass"], setup["secondary_mass"])
         if setup['subst'] == 11:  
             #primary mass Mp is divided into m1 and m2, with Mp=m1+m2 and q=m2/m1, so m1=Mp/(1+q)
             setup["primary_mass"] = np.round(float(setup["primary_mass"]/(1+q2)),3)
