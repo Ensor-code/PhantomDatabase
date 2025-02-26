@@ -8,6 +8,8 @@ We can create a new index (or use an existing one) and load Documents using Load
 
 The dahsboard is handled by streamlit. To run the dahsboard, use 'streamlit run dashboard/dashboard.py'. It should automatically open the dashboard in a new tab in your default web browser.
 
+Various python and bash scripts made to create standardised names for models, transfer or create files can be found in the directory logistics.
+
 Python dependencies:
  - Database:
     elasticsearch

@@ -28,6 +28,7 @@ st.set_page_config(page_title="Test Dashboard",
 alt.themes.enable("dark")
 
 load_dotenv()
+# for now it uses my api key, but eventually I'll create one just for the dashboar
 client = Elasticsearch("https://localhost:9200/",
                        api_key=os.getenv('API_KEY'),
                        verify_certs=False)
@@ -153,8 +154,11 @@ home, plots, list = st.tabs(["Home", "Plots", "List"])
 
 with home:
     st.header("Hi")
-    st.write("We can add more information here later on.\n")
-    st.image("/Users/camille/Pictures/loop.jpg", width=600)
+    st.write('''We can add more information here later on.  
+             Some details for the users, maybe a brief description of the database,
+             the models, the parameters, etc.  
+             Some useful links, people to contact.  
+             We also need a same for this thing.''')
     with st.expander("More information on the parameters stored in the database"):
         st.write("Here are the field name, the type of field (int, float, etc.), its format, units, and the file it is obtained from, if applicable.")
         with open(csv_path, "r") as csvfile:
