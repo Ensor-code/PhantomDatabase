@@ -69,6 +69,7 @@ def update_results(results):
     '''
     import os
     import streamlit as st
+    import streamlit_ext as ste
     try:
         for result_item in results:
             # Display document
@@ -141,6 +142,23 @@ def update_results(results):
                     st.markdown(
                     f" <p align=center> not available </p>",
                     unsafe_allow_html=True)
+            col1_, col2_, col3_, col4_ = st.columns([1, 1, 1, 1])
+            with col1_:
+                pass
+            with col2_:
+                with open(os.path.join(result_item['path to folder'],'wind.in'), "rb") as f:
+                    ste.download_button("Download .in file",
+                                       data=f,
+                                       file_name='wind.in',
+                                       )
+            with col3_:
+                with open(os.path.join(result_item['path to folder'],'wind.setup'), "rb") as f:
+                    ste.download_button("Download .setup file",
+                                       data=f,
+                                       file_name='wind.setup',
+                                       )
+            with col4_:
+                pass
 
             with st.expander("More details", icon='🔥'):
                     st.write('Here are all the model parameters stored in the database:')
@@ -162,7 +180,6 @@ def fetch_data(index_name,
                sma,
                period,
                icompanion,
-               version,
                publication,
                size=10000):
     '''
@@ -207,17 +224,12 @@ def fetch_data(index_name,
                     }
                 }]
 
-        # add filters on number of companions and Phantom version
+        # add filters on number of companions
         query_body["query"]["bool"]["filter"] = []
         if icompanion:
             query_body["query"]["bool"]["filter"].append(
                 {"terms": {
                     'icompanion_star': icompanion
-                }})
-        if version != "All":
-            query_body["query"]["bool"]["filter"].append(
-                {"term": {
-                    'version': version
                 }})
         if publication != "All":
             if publication == "Unpublished":

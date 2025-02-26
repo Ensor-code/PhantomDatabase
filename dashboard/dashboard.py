@@ -72,12 +72,6 @@ selected_index = st.sidebar.selectbox("Elasticsearch Index", ["wind"],
                                       key="selected_index")
 st.session_state['display'] = False
 
-# version selector
-versions = db.get_field_values(selected_index, client, "version")
-versions.insert(0, "All")
-version = st.sidebar.selectbox("Phantom version",
-                               versions,
-                               key="selected_version")
 
 # Publication selector
 publications = db.get_field_values(selected_index, client, "Publication")
@@ -157,8 +151,9 @@ with home:
     st.write('''We can add more information here later on.  
              Some details for the users, maybe a brief description of the database,
              the models, the parameters, etc.  
-             Some useful links, people to contact.  
-             We also need a same for this thing.''')
+             Some useful links, people to contact.''')
+    st.write('''We also need a same for this thing.''')
+    st.write("Also we can add a small tutorial on how to make queries using the python API, for people who want more specific queries.")
     with st.expander("More information on the parameters stored in the database"):
         st.write("Here are the field name, the type of field (int, float, etc.), its format, units, and the file it is obtained from, if applicable.")
         with open(csv_path, "r") as csvfile:
@@ -214,7 +209,7 @@ with col2_:
     if col2_.button("Apply"):
         st.session_state['search_results'] = db.fetch_data(
             selected_index, client, eccentricity, massratio, sma, period,
-            icompanion, version, publication)
+            icompanion, publication)
         st.session_state["display"] = True
         # unchecked the display box
 with col3_:

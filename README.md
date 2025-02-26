@@ -25,3 +25,4 @@ Python dependencies:
     plotly
     streamlit
     streamlit_js_eval
+    streamlit_ext
