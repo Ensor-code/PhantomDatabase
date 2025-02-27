@@ -121,7 +121,8 @@ def LoadDoc(directory: str, model, prefix: str, index_definition) -> Dict[str, A
     
     # create mappings for the model 
     modelData = {"Model name": model,
-                 "path to folder": directory}   
+                 "path to folder": directory,
+                 "Publication": "Unpublished"}   
     
     # get data from the .setup file
     modelData.update(LoadSetupData(directory, prefix, index_definition))
