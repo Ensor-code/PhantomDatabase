@@ -77,31 +77,41 @@ def update_results(results):
             # Details arranged in columns
             col1_, col2_, col3_ = st.columns([1, 1, 1])
             # search button
-            with col1_:            
+            with col1_:
                 # basic model info
                 st.markdown(
                     f"{result_item['icompanion_star']} companion(s), version {result_item['version']}"
                 )
                 if result_item['icompanion_star'] == 1:
                     # binary parameters
-                    st.write(f"Binary parameters: e={result_item['eccentricity']}, q={round(result_item['mass_ratio'],2)},"
-                             + f" a={round(result_item['semi_major_axis'],2)} AU, P={round(result_item['period'],2)} days"
-                             )
+                    st.write(
+                        f"Binary parameters: e={result_item['eccentricity']}, q={round(result_item['mass_ratio'],2)},"
+                        +
+                        f" a={round(result_item['semi_major_axis'],2)} AU, P={round(result_item['period'],2)} days"
+                    )
                 elif result_item['icompanion_star'] == 2:
                     if result_item['subst'] == 11:
-                        st.write(f"Wide binary: e={result_item['eccentricity']}, q={round(result_item['mass_ratio'],2)}, i={result_item['inclination']},"
-                                + f" a={round(result_item['semi_major_axis'],2)} AU, P={round(result_item['period'],2)} days"
-                                )
-                        st.write(f"Tight binary (M1 and M2): e={result_item['binary2_e']}, q={round(result_item['secondary_mass']/result_item['primary_mass'],2)},"
-                                + f" a={round(result_item['binary2_a'],2)} AU, P={round(result_item['binary2_p'],2)} days"
-                                )
+                        st.write(
+                            f"Wide binary: e={result_item['eccentricity']}, q={round(result_item['mass_ratio'],2)}, i={result_item['inclination']},"
+                            +
+                            f" a={round(result_item['semi_major_axis'],2)} AU, P={round(result_item['period'],2)} days"
+                        )
+                        st.write(
+                            f"Tight binary (M1 and M2): e={result_item['binary2_e']}, q={round(result_item['secondary_mass']/result_item['primary_mass'],2)},"
+                            +
+                            f" a={round(result_item['binary2_a'],2)} AU, P={round(result_item['binary2_p'],2)} days"
+                        )
                     elif result_item['subst'] == 12:
-                        st.write(f"Wide binary: e={result_item['eccentricity']}, q={round(result_item['mass_ratio'],2)}, i={result_item['inclination']},"
-                                + f" a={round(result_item['semi_major_axis'],2)} AU, P={round(result_item['period'],2)} days"
-                                )
-                        st.write(f"Tight binary (M2 and M3): e={result_item['binary2_e']}, q={round(result_item['tertiary_mass']/result_item['secondary_mass'],2)},"
-                                + f" a={round(result_item['binary2_a'],2)} AU, P={round(result_item['binary2_p'],2)} days"
-                                )
+                        st.write(
+                            f"Wide binary: e={result_item['eccentricity']}, q={round(result_item['mass_ratio'],2)}, i={result_item['inclination']},"
+                            +
+                            f" a={round(result_item['semi_major_axis'],2)} AU, P={round(result_item['period'],2)} days"
+                        )
+                        st.write(
+                            f"Tight binary (M2 and M3): e={result_item['binary2_e']}, q={round(result_item['tertiary_mass']/result_item['secondary_mass'],2)},"
+                            +
+                            f" a={round(result_item['binary2_a'],2)} AU, P={round(result_item['binary2_p'],2)} days"
+                        )
                 try:
                     st.write(
                         f" Wind terminal velocity: {round(result_item['wind_terminal_velocity'],2)} km/s"
@@ -128,46 +138,55 @@ def update_results(results):
                                      "orbital.png"))
                 except:
                     st.markdown(
-                    f" <p align=center> snapshot not available </p>",
-                    unsafe_allow_html=True)
+                        f" <p align=center> snapshot not available </p>",
+                        unsafe_allow_html=True)
             with col3_:
-                st.markdown(
-                    f" <p align=center> Close up </p>",
-                    unsafe_allow_html=True)
+                st.markdown(f" <p align=center> Close up </p>",
+                            unsafe_allow_html=True)
                 try:
                     st.image(
                         os.path.join(result_item['path to folder'],
                                      "orbital_zoom.png"))
                 except:
-                    st.markdown(
-                    f" <p align=center> not available </p>",
-                    unsafe_allow_html=True)
+                    st.markdown(f" <p align=center> not available </p>",
+                                unsafe_allow_html=True)
             col1_, col2_, col3_, col4_ = st.columns([1, 1, 1, 1])
             with col1_:
                 pass
             with col2_:
-                with open(os.path.join(result_item['path to folder'],'wind.in'), "rb") as f:
-                    ste.download_button("Download .in file",
-                                       data=f,
-                                       file_name='wind.in',
-                                       )
+                with open(
+                        os.path.join(result_item['path to folder'], 'wind.in'),
+                        "rb") as f:
+                    # regular dl buttons refresh the state of the page so we use streamlit_ext buttons
+                    ste.download_button(
+                        "Download .in file",
+                        data=f,
+                        file_name='wind.in',
+                    )
             with col3_:
-                with open(os.path.join(result_item['path to folder'],'wind.setup'), "rb") as f:
-                    ste.download_button("Download .setup file",
-                                       data=f,
-                                       file_name='wind.setup',
-                                       )
+                with open(
+                        os.path.join(result_item['path to folder'],
+                                     'wind.setup'), "rb") as f:
+                    ste.download_button(
+                        "Download .setup file",
+                        data=f,
+                        file_name='wind.setup',
+                    )
             with col4_:
                 pass
 
             with st.expander("More details", icon='🔥'):
-                    st.write('Here are all the model parameters stored in the database:')
-                    st.write('(see the home page for more details on the meaning and units of each parameter)')
-                    for key, value in result_item.items():
-                        st.write(f"**{key}**: {value}")
+                st.write(
+                    'Here are all the model parameters stored in the database:'
+                )
+                st.write(
+                    '(see the home page for more details on the meaning and units of each parameter)'
+                )
+                for key, value in result_item.items():
+                    st.write(f"**{key}**: {value}")
 
             st.write("---")
-                    
+
     except Exception as e:
         st.markdown(f"{result_item} ")
         st.error(f"Error performing search in Elasticsearch: {e}")
@@ -175,6 +194,7 @@ def update_results(results):
 
 def fetch_data(index_name,
                client,
+               manual_query,
                eccentricity,
                massratio,
                sma,
@@ -190,39 +210,46 @@ def fetch_data(index_name,
 
     try:
         query_body = {"size": size, "query": {"bool": {"should": []}}}
+        query_body["query"]["bool"]["must"] = []
+
+        # Add manual query if needed
+        if manual_query:
+            query_body["query"]["bool"]["must"].append(
+                {"query_string": {
+                    "query": manual_query
+                }})
 
         # Add binary ranges to query if needed
         if icompanion:
             if 0 not in icompanion:
-                query_body["query"]["bool"]["must"] = [{
+                query_body["query"]["bool"]["must"].append({
                     "range": {
                         "eccentricity": {
                             "gte": eccentricity[0],
                             "lte": eccentricity[1]
                         }
-                    }
-                }, {
+                    }})
+                query_body["query"]["bool"]["must"].append({
                     "range": {
                         "mass_ratio": {
                             "gte": massratio[0],
                             "lte": massratio[1]
                         }
-                    }
-                }, {
+                    }})
+                query_body["query"]["bool"]["must"].append({
                     "range": {
                         "semi_major_axis": {
                             "gte": sma[0],
                             "lte": sma[1]
                         }
-                    }
-                }, {
+                    }})
+                query_body["query"]["bool"]["must"].append({
                     "range": {
                         "period": {
                             "gte": period[0],
                             "lte": period[1]
                         }
-                    }
-                }]
+                    }})
 
         # add filters on number of companions
         query_body["query"]["bool"]["filter"] = []
@@ -233,14 +260,15 @@ def fetch_data(index_name,
                 }})
         if publication != "All":
             if publication == "Unpublished":
-                query_body["query"]["bool"]["filter"].append(
-                    {"bool": {
+                query_body["query"]["bool"]["filter"].append({
+                    "bool": {
                         "must_not": {
                             "exists": {
                                 "field": "Publication"
                             }
                         }
-                    }})
+                    }
+                })
             else:
                 query_body["query"]["bool"]["filter"].append(
                     {"term": {

@@ -142,9 +142,9 @@ if 'search_results' not in st.session_state:
     st.session_state['search_results'] = db.fetch_recent_data(selected_index,
                                                               client,
                                                               size=1000)
-
+manual_query = None
 ##### TABS #####
-home, plots, list = st.tabs(["Home", "Plots", "List"])
+home, plots, list, search = st.tabs(["Home", "Plots", "List", "Search"])
 
 with home:
     st.header("Hi")
@@ -208,7 +208,7 @@ with col1_:
 with col2_:
     if col2_.button("Apply"):
         st.session_state['search_results'] = db.fetch_data(
-            selected_index, client, eccentricity, massratio, sma, period,
+            selected_index, client, manual_query, eccentricity, massratio, sma, period,
             icompanion, publication)
         st.session_state["display"] = True
         # unchecked the display box
@@ -391,6 +391,21 @@ with plots:
                                           sizeref=sizeref,
                                           line_width=2))
             st.plotly_chart(fig)
+
+with search:
+    st.header("Search")
+    st.write("You can add your own query using the search bar below.")
+    st.write('''The parameters selected in the sidebar will also be used for your query.''')
+    st.write('''If you wish to cancel your query, just click on the "search" button with an empty query.''')
+    # add details on the query syntax
+    # search bar
+    manual_query = st.text_input("Query", key="manual_query")
+    if st.button("Search"):
+        st.session_state['search_results'] = db.fetch_data(
+            selected_index,  client, manual_query, eccentricity, massratio, sma, period,
+            icompanion, publication)
+        st.session_state["display"] = True
+
 
 # display query results
 st.write(str(len(st.session_state['search_results'])) + " models found")
