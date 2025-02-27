@@ -23,7 +23,8 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 st.set_page_config(page_title="Test Dashboard",
                    page_icon="💫",
                    layout="wide",
-                   initial_sidebar_state="expanded")
+                   initial_sidebar_state="expanded"
+                   )
 
 alt.themes.enable("dark")
 
@@ -68,33 +69,15 @@ db.remove_upper_padding(
 
 st.sidebar.title("Welcome to the jungle! 🌴")
 
+#index selector
 selected_index = st.sidebar.selectbox("Elasticsearch Index", ["wind"],
                                       key="selected_index")
 st.session_state['display'] = False
 
-
-# Publication selector
-publications = db.get_field_values(selected_index, client, "Publication")
-publications.append("Unpublished")
-publications.insert(0, "All")
-publication = st.sidebar.selectbox("Publication",
-                                   publications,
-                                   key="selected_publication")
-
-# add checkboxes for number of companions
-st.sidebar.write("Number of companions")
-col1_, col2_, col3_ = st.sidebar.columns(3)
-with col1_:
-    comp0 = col1_.checkbox("0", key="comp_0", value=True)
-with col2_:
-    comp1 = col2_.checkbox("1", key="comp_1", value=True)
-with col3_:
-    comp2 = col3_.checkbox("2", key="comp_2", value=True)
-# build companion filter for later query
-icompanion = []
-if comp0: icompanion.append(0)
-if comp1: icompanion.append(1)
-if comp2: icompanion.append(2)
+# number of companions selector
+icomp = db.get_field_values(selected_index, client, "icompanion_star")
+icompanion = st.sidebar.multiselect("Number of companions",
+    icomp,icomp,key='icompanion_star')
 
 # get range of binary parameters in index
 ranges = {
@@ -143,8 +126,10 @@ if 'search_results' not in st.session_state:
                                                               client,
                                                               size=1000)
 manual_query = None
+
+
 ##### TABS #####
-home, plots, list, search = st.tabs(["Home", "Plots", "List", "Search"])
+home, search, list, plots = st.tabs(["Home", "Search", "List", "Plots"])
 
 with home:
     st.header("Hi")
@@ -154,22 +139,85 @@ with home:
              Some useful links, people to contact.''')
     st.write('''We also need a same for this thing.''')
     st.write("Also we can add a small tutorial on how to make queries using the python API, for people who want more specific queries.")
-    with st.expander("More information on the parameters stored in the database"):
-        st.write("Here are the field name, the type of field (int, float, etc.), its format, units, and the file it is obtained from, if applicable.")
-        with open(csv_path, "r") as csvfile:
-            for lines in csvfile:
-                if lines.startswith("#") or lines.startswith("0"):
-                    continue
-                cell1, cell2 = lines.strip().split(",#,")
-                line = cell1.split(",")
-                string = f"- :orange[{line[0]}:]"
-                for s in line[1:]:
-                    if s != "0":
-                        string+=f" {s},"
-                string = string.strip(",")
-                if cell2 != "0":
-                    string+= "\n\n" +f"   {cell2.strip('"')}"
-                st.write(string.strip(","))
+    st.write('''If you have any questions or suggestions, please contact the database administrator.''')
+
+
+with search:
+    st.header("Search")
+    st.write('''If you need to make a specific query that goes beyond what the sidebar on the left offers, 
+             you can add your own query using the search bar below. Your results can then be dispayed in the "List" tab.''')
+    st.write('''To query models, first fill in the search bar with the parameters values/ranges you are looking for, and complete using the keyword
+             filters below if needed. Then click on the :red-background[search] button to run the query.''')
+    st.write('''The parameters selected in the sidebar will also be used for the query.''')
+    st.write('''Details on the fields that can used for queries are displayed at the bottom of the page.''')
+    st.write('''Please note that the search bar is for queries on numeric fields only. For queries on keywords (strings), please use the selectors in the sidebar.''')
+    st.write('''If you wish to cancel your search, just click on the :red-background[search] button with an empty query.''')
+
+
+
+    st.markdown("---")
+    # search bar
+    manual_query = st.text_input("Query", key="manual_query")
+    # add details on the query syntax
+    st.write('''The search bar is for queries on numeric variables, and should be made with the following syntax:  
+             - The field name followed by a colon, then the value you are looking for.   
+             - You can specifiy a range with square brackets, or curly brackets for exclusive bounds.  
+             - Similarly, you can specify upper or lower bounds with the symbols >, <, >= or <=.  
+             - All of the above can be combined with AND, OR, and NOT, and parentheses.''')
+    
+    st.write('''For example, if you want models with a mass ratio above 1, and an eccentricity between 0.5 and 0.8, you can use the following query:  
+             :grey-background[eccentricity:{0.5 TO 0.8} AND mass_ratio:>1] or :grey-background[eccentricity:(>=0.5  AND <=0.8) AND mass_ratio:>1]''')
+    st.write('''For more information, please refer to the Elasticsearch documentation.''')
+
+
+    # Keyword selectors
+    st.write("For queries on keyword fields, please use the selectors below.")
+    with st.popover("Keyword filters"):
+        # Version selector
+        versions = db.get_field_values(selected_index, client, "version")
+        version = st.multiselect("Phantom versions",
+            versions,versions,key='version')
+        def _select_all():
+            st.session_state.version = versions
+        st.button("Select all Phantom versions", on_click=_select_all)
+
+        # Publication selector
+        publications = db.get_field_values(selected_index, client, "Publication")
+        publication = st.multiselect("Publications",
+            publications,publications,key='publication')
+        def _select_all():
+            st.session_state.publication = publications
+        st.button("Select both published and non-published work", on_click=_select_all)
+
+    col1_, col2_, col3_ = st.columns((2*page_width/6, page_width/6,  2*page_width/6))
+    with col1_:
+        pass
+    with col3_:
+        pass
+    with col2_:
+        if st.button("Search", type='primary'):
+            st.session_state['search_results'] = db.fetch_data(
+                selected_index,  client, manual_query, eccentricity, massratio, sma, period,
+                icompanion, publication)
+
+    st.markdown("---")
+    st.markdown("### Field details")
+    st.write("Here are the field name, the type of field (int, float, etc.), its format, units, and the file it is obtained from, if applicable.")
+    with open(csv_path, "r") as csvfile:
+        for lines in csvfile:
+            if lines.startswith("#") or lines.startswith("0"):
+                continue
+            cell1, cell2 = lines.strip().split(",#,")
+            line = cell1.split(",")
+            string = f"- :orange[{line[0]}:]"
+            for s in line[1:]:
+                if s != "0":
+                    string+=f" {s},"
+            string = string.strip(",")
+            if cell2 != "0":
+                string+= "\n\n" +f"   {cell2.strip('"')}"
+            st.write(string.strip(","))
+
 
 with list:
     st.header("List of models")
@@ -392,20 +440,7 @@ with plots:
                                           line_width=2))
             st.plotly_chart(fig)
 
-with search:
-    st.header("Search")
-    st.write("You can add your own query using the search bar below.")
-    st.write('''The parameters selected in the sidebar will also be used for your query.''')
-    st.write('''If you wish to cancel your query, just click on the "search" button with an empty query.''')
-    # add details on the query syntax
-    # search bar
-    manual_query = st.text_input("Query", key="manual_query")
-    if st.button("Search"):
-        st.session_state['search_results'] = db.fetch_data(
-            selected_index,  client, manual_query, eccentricity, massratio, sma, period,
-            icompanion, publication)
-        st.session_state["display"] = True
-
 
 # display query results
+st.sidebar.write(str(len(st.session_state['search_results'])) + " models found")
 st.write(str(len(st.session_state['search_results'])) + " models found")

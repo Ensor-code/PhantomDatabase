@@ -216,7 +216,8 @@ def fetch_data(index_name,
         if manual_query:
             query_body["query"]["bool"]["must"].append(
                 {"query_string": {
-                    "query": manual_query
+                    "query": manual_query,
+                    "default_field": "mass ratio"
                 }})
 
         # Add binary ranges to query if needed
@@ -258,20 +259,9 @@ def fetch_data(index_name,
                 {"terms": {
                     'icompanion_star': icompanion
                 }})
-        if publication != "All":
-            if publication == "Unpublished":
-                query_body["query"]["bool"]["filter"].append({
-                    "bool": {
-                        "must_not": {
-                            "exists": {
-                                "field": "Publication"
-                            }
-                        }
-                    }
-                })
-            else:
+        if publication:
                 query_body["query"]["bool"]["filter"].append(
-                    {"term": {
+                    {"terms": {
                         'Publication': publication
                     }})
 
