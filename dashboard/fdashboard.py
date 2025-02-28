@@ -118,11 +118,11 @@ def update_results(results):
                     )
                 except:
                     st.write(" Wind terminal velocity: Not available")
-                f" Wind mass loss rate: {result_item['wind_mass_rate']} Msun/yr"
-                try:
-                    st.markdown(f"Published in {result_item['Publication']}")
-                except:
+                st.markdown(f" Wind mass loss rate: {result_item['wind_mass_rate']} Msun/yr")
+                if "Unpublished" in result_item['Publication']:
                     st.markdown(f"Unpublished")
+                else:
+                    st.markdown(f"Published in {result_item['Publication']}")
                 # timestamp
                 timestamp = result_item.get('model date', '')
                 if timestamp:
