@@ -225,7 +225,7 @@ with list:
              + "hidden by default. You can display/hide the list by using the buttons below.")
 
     st.write("For each model, we display orbital parameters, as well as snapshots of the model"\
-             + "in the equatorial (xy) plane, showing a broad view and a close up view of the system.")
+             + "in the equatorial (xy) and meridional (xz) planes.")
 
     # show models buttons
     col1_, col2_, col3_, col4_ = st.columns([1, 1, 1, 1])

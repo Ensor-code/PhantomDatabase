@@ -141,14 +141,14 @@ def update_results(results):
                         f" <p align=center> snapshot not available </p>",
                         unsafe_allow_html=True)
             with col3_:
-                st.markdown(f" <p align=center> Close up </p>",
+                st.markdown(f" <p align=center> Meridional slice (XZ plane) </p>",
                             unsafe_allow_html=True)
                 try:
                     st.image(
                         os.path.join(result_item['path to folder'],
-                                     "orbital_zoom.png"))
+                                     "meridional.png"))
                 except:
-                    st.markdown(f" <p align=center> not available </p>",
+                    st.markdown(f" <p align=center> snapshot not available </p>",
                                 unsafe_allow_html=True)
             col1_, col2_, col3_, col4_ = st.columns([1, 1, 1, 1])
             with col1_:
