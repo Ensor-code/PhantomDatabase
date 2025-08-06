@@ -157,7 +157,7 @@ def search_dir(loc, prefix, minDumpFiles=20):
         dumpFiles = list(
             filter(
                 lambda x: (prefix + '_' in x and not '.tmp' in x and not '.txt'
-                           in x and not '.png' in x), files))
+                           in x and not '.png' in x and not '.dat' in x), files))
         setupFiles = list(filter(lambda x: (prefix + '.setup' in x), files))
         inFiles = list(filter(lambda x: (prefix + '.in' in x), files))
         # Only include models with a minimum amount of dumpfiles, because the others can be trown away

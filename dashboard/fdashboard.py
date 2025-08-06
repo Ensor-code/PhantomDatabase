@@ -65,7 +65,7 @@ def get_range(index_name, client, field) -> tuple:
 
 def update_results(results):
     '''
-    Update the results of the search
+    Update the results of the search and display them in a list
     '''
     import os
     import streamlit as st
@@ -118,11 +118,11 @@ def update_results(results):
                     )
                 except:
                     st.write(" Wind terminal velocity: Not available")
-                f" Wind mass loss rate: {result_item['wind_mass_rate']} Msun/yr"
-                try:
-                    st.markdown(f"Published in {result_item['Publication']}")
-                except:
+                st.markdown(f" Wind mass loss rate: {result_item['wind_mass_rate']} Msun/yr")
+                if "Unpublished" in result_item['Publication']:
                     st.markdown(f"Unpublished")
+                else:
+                    st.markdown(f"Published in {result_item['Publication']}")
                 # timestamp
                 timestamp = result_item.get('model date', '')
                 if timestamp:
@@ -141,14 +141,14 @@ def update_results(results):
                         f" <p align=center> snapshot not available </p>",
                         unsafe_allow_html=True)
             with col3_:
-                st.markdown(f" <p align=center> Close up </p>",
+                st.markdown(f" <p align=center> Meridional slice (XZ plane) </p>",
                             unsafe_allow_html=True)
                 try:
                     st.image(
                         os.path.join(result_item['path to folder'],
-                                     "orbital_zoom.png"))
+                                     "meridional.png"))
                 except:
-                    st.markdown(f" <p align=center> not available </p>",
+                    st.markdown(f" <p align=center> snapshot not available </p>",
                                 unsafe_allow_html=True)
             col1_, col2_, col3_, col4_ = st.columns([1, 1, 1, 1])
             with col1_:

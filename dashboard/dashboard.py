@@ -37,6 +37,9 @@ client = Elasticsearch("https://localhost:9200/",
 # CSV path to provide details on the index mappings
 csv_path = "/Users/camille/Documents/PhantomDatabase/metadata.csv"
 
+# Directory of assets
+assets_dir = os.path.join(os.path.abspath(os.getcwd()), "assets")
+
 # Define data labels needed for dataframe
 # format is -> {elastic_field_name: "Label to display"}
 dlabels = {
@@ -67,10 +70,10 @@ db.remove_upper_padding(
 
 ##### SIDEBAR #####
 
-st.sidebar.title("Welcome to the jungle! 🌴")
+st.sidebar.title("Quick search 🔎")
 
 #index selector
-selected_index = st.sidebar.selectbox("Elasticsearch Index", ["wind"],
+selected_index = st.sidebar.selectbox("Database Index", ["wind"],
                                       key="selected_index")
 st.session_state['display'] = False
 
@@ -131,15 +134,69 @@ manual_query = None
 ##### TABS #####
 home, search, list, plots = st.tabs(["Home", "Search", "List", "Plots"])
 
+
 with home:
-    st.header("Hi")
-    st.write('''We can add more information here later on.  
-             Some details for the users, maybe a brief description of the database,
-             the models, the parameters, etc.  
-             Some useful links, people to contact.''')
-    st.write('''We also need a same for this thing.''')
-    st.write("Also we can add a small tutorial on how to make queries using the python API, for people who want more specific queries.")
-    st.write('''If you have any questions or suggestions, please contact the database administrator.''')
+    st.header("Welcome!")
+    col1_, col2_ = st.columns((2*page_width/3, page_width/3))
+    with col1_:
+        st.write('''  This is a database of 3D hydrodynamics models of winds around AGB stars in single and multiple systems.
+                These models were computed using the Phantom code (Price et al. 2018, https://phantomsph.github.io/), an SPH code, and their aim is to study the interaction 
+                of stellar winds with one or more companions.''')
+        st.write('''To use this tool, please select the :grey-background[Database index] you want to query in the sidebar on the left. Then adjust the parameters ranges and filters to your needs.
+                For more specific queries, you can switch to the :grey-background[Search] tab, more details are given there. The result of the query will be displayed in the :grey-background[List] tab, in the form
+                of a model list, along with their parameters and snapshots of the simulations.''')
+        st.write('''The plots tab contains some useful plots to explore the parameter space of our dataset. The data shown there is 
+                affected by the ranges and filters selected in the sidebar and the search bar.''')
+    with col2_:
+        st.image(os.path.join(assets_dir,
+                            "orbital.png"))
+
+st.markdown("---")
+st.write('''##### Publications   
+The models accessible in this database are described in the following publications:  
+- SPH modelling of AGB wind morphology in hierarchical triple systems and a comparison to observation of R Aql, Malfait et al., 2024, Astronomy & Astrophysics, Volume 691, id.A57, 17 pp.  
+- Impact of H I cooling and study of accretion disks in asymptotic giant branch wind-companion smoothed particle hydrodynamic simulations, Malfait et al., 2024, Astronomy & Astrophysics, Volume 691, id.A84, 20 pp.  
+- SPH modelling of companion-perturbed AGB outflows including a new morphology classification scheme, Maes et al., 2021, Astronomy & Astrophysics, Volume 653, id.A25, 18 pp.  
+- SPH modelling of wind-companion interactions in eccentric AGB binary systems Malfait et al., 2021, Astronomy & Astrophysics, Volume 652, id.A51, 21 pp.  
+         ''')
+
+
+col1_, col2_ = st.columns((page_width/2, page_width/2))
+with col1_:
+    st.write('''##### Acknowlegments   
+This database was built in collaboration with DiRAC and the HPC system at Durham University, UK. It uses Elasticsearch to manage the data and queries, and streamlit to display it.
+The plots showed are made using plotly, Altair (VanderPlas et al. 2018), pandas (McKinney 2010), and NumPy (Harris et al. 2020).''')
+    st.write(''' This work is supported by the KU Leuven C1 excellence grant BRAVE C16/23/009, the KU Leuven Methusalem grant SOUL METH/24/012''')
+    imcol1_, imcol2_, imcol3_, imcol4_ = st.columns(4)
+    with imcol1_:
+        st.image(os.path.join(assets_dir,
+                        "Atomium.png"), width=100)
+    with imcol2_:
+        st.image(os.path.join(assets_dir,
+                        "DIRAC.webp"), width=100)
+    with imcol3_:
+        st.image(os.path.join(assets_dir,
+                        "BRAVE.png"), width=100)
+    with imcol4_:
+        st.image(os.path.join(assets_dir,
+                        "SOUL.png"), width=100) 
+
+with col2_:
+    st.write('''##### Database administrator:  
+- Camille Landri, KU Leuven, Belgium  
+Contact: camille.landri@kuleuven.be''')
+
+    st.write('''##### Database contributors (in alphabetical order):  
+- Taïssa Danilovich, Monash University, Australia  
+- Davide Dionese, Université Libre de Bruxelles, Belgium  
+- Mats Esseldeurs, KU Leuven, Belgium  
+- Marcus Keil, University College London, UK  
+- Jolien Malfait, previously KU Leuven, Belgium
+- Lionel Siess, Université Libre de Bruxelles, Belgium  
+- Owen Vermeulen, KU Leuven, Belgium  
+- Jeremy Yates, University College London, UK''')
+
+st.write('''If you have any questions or suggestions, don't hesitate to contact the database administrators!''')
 
 
 with search:
@@ -150,7 +207,7 @@ with search:
              filters below if needed. Then click on the :red-background[search] button to run the query.''')
     st.write('''The parameters selected in the sidebar will also be used for the query.''')
     st.write('''Details on the fields that can used for queries are displayed at the bottom of the page.''')
-    st.write('''Please note that the search bar is for queries on numeric fields only. For queries on keywords (strings), please use the selectors in the sidebar.''')
+    st.write('''Please note that the search bar is for queries on numeric fields only. For queries on keywords (strings), e.g., publications, please use the selectors in the sidebar.''')
     st.write('''If you wish to cancel your search, just click on the :red-background[search] button with an empty query.''')
 
 
@@ -187,7 +244,7 @@ with search:
             publications,publications,key='publication')
         def _select_all():
             st.session_state.publication = publications
-        st.button("Select both published and non-published work", on_click=_select_all)
+        st.button("Select all published and non-published work", on_click=_select_all)
 
     col1_, col2_, col3_ = st.columns((2*page_width/6, page_width/6,  2*page_width/6))
     with col1_:
@@ -225,7 +282,9 @@ with list:
              + "hidden by default. You can display/hide the list by using the buttons below.")
 
     st.write("For each model, we display orbital parameters, as well as snapshots of the model"\
-             + "in the equatorial (xy) plane, showing a broad view and a close up view of the system.")
+             + "in the equatorial (xy) and meridional (xz) planes.")
+    
+    st.write("If you want the plots to display our whole dataset, just reset the query by refreshing the page.")
 
     # show models buttons
     col1_, col2_, col3_, col4_ = st.columns([1, 1, 1, 1])
