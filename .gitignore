@@ -5,3 +5,7 @@ dashboard/__pycache__/
 __pycache__/
 logistics/moveup.sh
 .DS_Store
+modelNames/getModelName_general.ipynb
+logistics/snapshots.ipynb
+logistics/snapshots.sh
+logistics/cleanup.sh

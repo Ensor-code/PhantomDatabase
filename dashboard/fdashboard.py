@@ -65,7 +65,7 @@ def get_range(index_name, client, field) -> tuple:
 
 def update_results(results):
     '''
-    Update the results of the search
+    Update the results of the search and display them in a list
     '''
     import os
     import streamlit as st
