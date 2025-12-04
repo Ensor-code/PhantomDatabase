@@ -12,7 +12,8 @@ Various python and bash scripts made to create standardised names for models, tr
 
 Python dependencies:
  - Database:
-    elasticsearch
+    elasticsearch (<=18.7.1)
+    elastic-transport (<=18.7.1)
     dotenv (for API key storage)
     streamlit (dashboard)
     numpy
@@ -25,4 +26,3 @@ Python dependencies:
     plotly
     streamlit
     streamlit_js_eval
-    streamlit_ext
