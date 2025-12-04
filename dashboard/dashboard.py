@@ -304,7 +304,10 @@ with list:
     st.write("For each model, we display orbital parameters, as well as snapshots of the model "\
              + "in the equatorial (xy) and meridional (xz) planes.")
     st.write("If you want the plots to display our whole dataset, just reset the query by refreshing the page.")
-    st.write("You can download the input and setup files used for a model by clicking on the relevant "\
+    st.write("You can download a .csv file containing the list of models fitting your query by clicking on the " \
+             + "download button below. You can then choose between a file containing the model with all the parameters "\
+             + "stored in the database, or just a list of the model names." \
+             + " You can download the input and setup files used for a model by clicking on the relevant "\
              + "buttons below each model. If you wish to obtain a full dataset, please contact the database "\
              + "administrator and the first author of the corresponding publication (if applicable).")
 
