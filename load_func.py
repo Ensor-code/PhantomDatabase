@@ -118,25 +118,36 @@ def LoadDoc(directory: str, model, prefix: str, index_definition) -> Dict[str, A
     import os
 
     directory = os.path.join(directory, model)
-    
+    try:
+        os.chdir(directory)
+    except FileNotFoundError:
+        print("     ... ERROR - DIRECTORY NOT FOUND. Skipping model:")
+        print(model)
+        return {}
     # create mappings for the model 
     modelData = {"Model name": model,
                  "path to folder": directory,
                  "Publication": "Unpublished"}   
     
     # get data from the .setup file
+    print('loading setup data')
     modelData.update(LoadSetupData(directory, prefix, index_definition))
 
+    print('loading in data')
     # get data from the .in file
     modelData.update(LoadInData(directory, prefix, index_definition))
 
+    print('loading header data')
     # get data from the header.txt file
     modelData.update(LoadHeaderData(directory, index_definition))
 
+    print('loading ev data')
+    print(directory)
     # get data from the .ev file
     modelData.update(LoadEvData(directory, prefix))
 
     # get data from the wind1D.dat file
+    print('loading wind data')
     if prefix == "wind":
         modelData.update(LoadWindData(directory))
     
@@ -356,7 +367,6 @@ def LoadEvData(directory: str, prefix: str) -> Dict[str, Any]:
     if not ev_files:
         print("ERROR: %s No *.ev files found!"% directory)
         sys.exit()
-
     # extract the number from the filenames and find the one with the largest number
     max_number = -1
     max_file = None
@@ -368,7 +378,6 @@ def LoadEvData(directory: str, prefix: str) -> Dict[str, Any]:
                 max_file = file
         except ValueError:
             continue
-
     if max_file is None:
         print("ERROR: %s No valid wind*.ev files found!" % directory)
         sys.exit()
@@ -376,10 +385,12 @@ def LoadEvData(directory: str, prefix: str) -> Dict[str, Any]:
     with open(os.path.join(directory, max_file), "r") as data:
         # everything we need is in the last line
         cu_to_yr = 0.15916423881616068 # according to splash units (code units are set such that G=1)
-
-        line = data.readlines()[-1]
-        ev['simulation time'] = float(line.strip().split()[0]) * cu_to_yr
-            
+        # only grab the last line of the file (the .ev file can be very large, so we avoid reading everything into memory)
+        data.seek(-2, 2)  # Move the cursor to the second last byte
+        while data.read(1) != b'\n':  # Move backward until finding a newline
+            data.seek(-2, 1)
+        line = data.readline().decode()
+        ev['simulation time'] = float(line.strip().split()[0]) * cu_to_yr   
     return ev
 
 
@@ -448,6 +459,7 @@ def CheckEntries(model:str, entries: dict):
         modelData: dictionary containing the data for the model
     '''
     import sys
+    err = 0
     # Mandatory fields
     for key in ['version', 'model date', 
                 'path to folder', 'simulation time', 
@@ -455,12 +467,14 @@ def CheckEntries(model:str, entries: dict):
                 'ieos', 'Model name', 'isink_radiation']:
         if key not in entries:
                 print("%s : \n Entry %s not in model data, but required." % (model, key))
+                err = 1
 
     # equation of state entries
     if entries['ieos'] == 2:
         for key in ['mu']:
             if key not in entries:
                 print("%s : \n Entry %s not in model data, but required by adiabatic EoS" % (model, key))
+                err = 1
 
     # optional entries linked to special implementations in Phantom
     if entries['icompanion_star']>=1:
@@ -473,6 +487,7 @@ def CheckEntries(model:str, entries: dict):
                     'mass_ratio', 'period']:
             if key not in entries:
                 print("%s : \n Entry %s not in model data, but required by binaries/triples" % (model, key))
+                err = 1
         # Check that triples parameters are all filled
         if entries['icompanion_star']==2:
             for key in ['tertiary_mass', 'tertiary_racc',
@@ -481,6 +496,7 @@ def CheckEntries(model:str, entries: dict):
                         'binary2_e', 'binary2_a']:
                 if key not in entries:
                     print("%s : \n Entry %s not in model data, but required by triples" % (model, key))
+                    err = 1
     
     if entries['wind_mass_rate']==1:
         # Check that wind parameters are all filled
@@ -489,18 +505,23 @@ def CheckEntries(model:str, entries: dict):
                     'wind_shell_spacing', 'iwind_resolution']:
             if key not in entries:
                 print("%s : \n Entry %s not in modelData, but required by wind" % (model, key))
+                err = 1
     
     if entries['icooling'] != 0:
         # Check that cooling parameters are all filled
         for key in ['icool_method', 'excitation_HI','Tfloor']:
             if key not in entries:
                 print("%s : \n, Entry %s not in modelData, but required by cooling" % (model, key))
+                err = 1
 
     if entries['idust_opacity'] != 0:
         # Check that dust parameters are all filled - placeholder
         for key in ['iget_tdust']:
             if key not in entries:
                 print("%s : \n Entry %s not in modelData, but required by dust" % (model, key))
+                err = 1
+
+    return err
 
 
 
