@@ -26,16 +26,17 @@ st.set_page_config(page_title="Test Dashboard",
                    initial_sidebar_state="expanded"
                    )
 
-alt.themes.enable("dark")
+alt.theme.enable("dark")
 
 load_dotenv()
 # for now it uses my api key, but eventually I'll create one just for the dashboar
 client = Elasticsearch("https://localhost:9200/",
                        api_key=os.getenv('API_KEY'),
-                       verify_certs=False)
+                       verify_certs=False,
+                       ssl_show_warn=False)
 
 # CSV path to provide details on the index mappings
-csv_path = "/Users/camille/Documents/PhantomDatabase/metadata.csv"
+csv_path = "/cosma/home/dr011/dc-land2/PhantomDatabase/metadata.csv"
 
 # Directory of assets
 assets_dir = os.path.join(os.path.abspath(os.getcwd()), "assets")
@@ -53,8 +54,11 @@ dlabels = {
     "wind_terminal_velocity": "Wind terminal velocity (km/s)",
 }
 
+# Initialise session state variables for buttons
 if "display" not in st.session_state:
     st.session_state["display"] = False
+if "dl" not in st.session_state:
+    st.session_state["dl"] = False
 
 # page length (used for column placements)
 page_width = streamlit_js_eval(
@@ -75,7 +79,6 @@ st.sidebar.title("Quick search 🔎")
 #index selector
 selected_index = st.sidebar.selectbox("Database Index", ["wind"],
                                       key="selected_index")
-st.session_state['display'] = False
 
 # number of companions selector
 icomp = db.get_field_values(selected_index, client, "icompanion_star")
@@ -164,22 +167,24 @@ The models accessible in this database are described in the following publicatio
 col1_, col2_ = st.columns((page_width/2, page_width/2))
 with col1_:
     st.write('''##### Acknowlegments   
-This database was built in collaboration with DiRAC and the HPC system at Durham University, UK. It uses Elasticsearch to manage the data and queries, and streamlit to display it.
+A large fraction of the models stored in this database are part of an effort to characterise the morphology of AGB winds carried by the ALMA large program ATOMIUM (https://astro-atomium.github.io/).''')
+    st.write(''' This database was built in collaboration with DiRAC and the Cosma Supercomputer at Durham University, UK. It uses Elasticsearch to manage the data and queries, and streamlit to display it.
 The plots showed are made using plotly, Altair (VanderPlas et al. 2018), pandas (McKinney 2010), and NumPy (Harris et al. 2020).''')
-    st.write(''' This work is supported by the KU Leuven C1 excellence grant BRAVE C16/23/009, the KU Leuven Methusalem grant SOUL METH/24/012''')
-    imcol1_, imcol2_, imcol3_, imcol4_ = st.columns(4)
+    st.write(''' This work is supported by the KU Leuven C1 excellence grant BRAVE C16/23/009.''')
+    marg_l, imcol1_, imcol2_, imcol3_, marg_r = st.columns(5)
+    with marg_l:
+        pass
     with imcol1_:
         st.image(os.path.join(assets_dir,
-                        "Atomium.png"), width=100)
+                        "Atomium.png"), width='stretch')
     with imcol2_:
         st.image(os.path.join(assets_dir,
-                        "DIRAC.webp"), width=100)
+                        "DIRAC.webp"),width='stretch')
     with imcol3_:
         st.image(os.path.join(assets_dir,
-                        "BRAVE.png"), width=100)
-    with imcol4_:
-        st.image(os.path.join(assets_dir,
-                        "SOUL.png"), width=100) 
+                        "BRAVE.png"), width='stretch')
+    with marg_r:
+        pass
 
 with col2_:
     st.write('''##### Database administrator:  
@@ -196,7 +201,10 @@ Contact: camille.landri@kuleuven.be''')
 - Owen Vermeulen, KU Leuven, Belgium  
 - Jeremy Yates, University College London, UK''')
 
-st.write('''If you have any questions or suggestions, don't hesitate to contact the database administrators!''')
+
+st.markdown("<p style='text-align: center;'> If you have any questions or suggestions, please reach out to the database administrators!</p>", unsafe_allow_html=True)
+
+
 
 
 with search:
@@ -236,7 +244,7 @@ with search:
             versions,versions,key='version')
         def _select_all():
             st.session_state.version = versions
-        st.button("Select all Phantom versions", on_click=_select_all)
+        st.button("Select all Phantom versions", on_click=_select_all,width='stretch')
 
         # Publication selector
         publications = db.get_field_values(selected_index, client, "Publication")
@@ -244,7 +252,7 @@ with search:
             publications,publications,key='publication')
         def _select_all():
             st.session_state.publication = publications
-        st.button("Select all published and non-published work", on_click=_select_all)
+        st.button("Select all published and non-published work", on_click=_select_all,width='stretch')
 
     col1_, col2_, col3_ = st.columns((2*page_width/6, page_width/6,  2*page_width/6))
     with col1_:
@@ -252,7 +260,7 @@ with search:
     with col3_:
         pass
     with col2_:
-        if st.button("Search", type='primary'):
+        if st.button("Search", type='primary', width='stretch'):
             st.session_state['search_results'] = db.fetch_data(
                 selected_index,  client, manual_query, eccentricity, massratio, sma, period,
                 icompanion, publication)
@@ -275,52 +283,66 @@ with search:
                 string+= "\n\n" +f"   {cell2.strip('"')}"
             st.write(string.strip(","))
 
+# search button in the sidebar
+col1_, col2_, col3_ = st.sidebar.columns([1, 2, 1])
+with col1_:
+    pass
+with col2_:
+    if col2_.button("Apply",width='stretch'):
+        st.session_state['search_results'] = db.fetch_data(
+            selected_index, client, manual_query, eccentricity, massratio, sma, period,
+            icompanion, publication)
+        on_click = st.session_state["display"] = False
+        on_click = st.session_state["dl"] = False
+with col3_:
+    pass
 
 with list:
     st.header("List of models")
     st.write("Here is a list of the models you queried. To prevent performance issues, the list is " \
              + "hidden by default. You can display/hide the list by using the buttons below.")
-
-    st.write("For each model, we display orbital parameters, as well as snapshots of the model"\
+    st.write("For each model, we display orbital parameters, as well as snapshots of the model "\
              + "in the equatorial (xy) and meridional (xz) planes.")
-    
     st.write("If you want the plots to display our whole dataset, just reset the query by refreshing the page.")
+    st.write("You can download the input and setup files used for a model by clicking on the relevant "\
+             + "buttons below each model. If you wish to obtain a full dataset, please contact the database "\
+             + "administrator and the first author of the corresponding publication (if applicable).")
 
     # show models buttons
-    col1_, col2_, col3_, col4_ = st.columns([1, 1, 1, 1])
-    with col1_:
+    marg_l, col1_, col2_, marg_r = st.columns([1, 1,1,1])
+    with marg_l:
         pass
+    with col1_:
+        if st.button(
+            "Show/hide models",
+            help="Check to display the list of models with snapshots. \n" \
+            + " This may hinder performances for large queries, use at your own risks.",
+            width='stretch'):
+            if st.session_state['display'] == False:
+                on_click = st.session_state["display"] = True
+            else:
+                on_click = st.session_state["display"] = False
     with col2_:
         if st.button(
-            "Show models",
-            help="Check to display the list of models with snapshots. \n" \
-            + " This may hinder performances for large queries, use at your own risks."
-        ):
-            on_click = st.session_state["display"] = True
-    with col3_:
-        if st.button(
-                "Hide models",
-                help="Check to hide the list of models with snapshots. \n"):
-            st.session_state["display"] = False
-    with col4_:
+                "Download list as .csv",
+                help="Download the list of queried models as a .csv file. \n",
+                width='stretch'):
+            if len(st.session_state['search_results'])>0:
+                if st.session_state['dl'] == False:
+                    on_click = st.session_state["dl"] = True
+                else:
+                    on_click = st.session_state["dl"] = False
+            else:
+                st.warning("The query returned no results!")
+    with marg_r:
         pass
+    
+    if st.session_state["dl"]:
+        db.download_model_list(st.session_state['search_results'])
+
     # display model list if the box is checked
     if st.session_state['display']:
         db.update_results(st.session_state['search_results'])
-
-# search button in the sidebar
-col1_, col2_, col3_ = st.sidebar.columns([1, 1, 1])
-with col1_:
-    pass
-with col2_:
-    if col2_.button("Apply"):
-        st.session_state['search_results'] = db.fetch_data(
-            selected_index, client, manual_query, eccentricity, massratio, sma, period,
-            icompanion, publication)
-        st.session_state["display"] = True
-        # unchecked the display box
-with col3_:
-    pass
 
 with plots:
     st.header("Plots")

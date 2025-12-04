@@ -69,7 +69,6 @@ def update_results(results):
     '''
     import os
     import streamlit as st
-    import streamlit_ext as ste
     try:
         for result_item in results:
             # Display document
@@ -158,19 +157,23 @@ def update_results(results):
                         os.path.join(result_item['path to folder'], 'wind.in'),
                         "rb") as f:
                     # regular dl buttons refresh the state of the page so we use streamlit_ext buttons
-                    ste.download_button(
+                    st.download_button(
                         "Download .in file",
                         data=f,
+                        key=f"download_in_{result_item['Model name']}",
                         file_name='wind.in',
+                        width='stretch',
                     )
             with col3_:
                 with open(
                         os.path.join(result_item['path to folder'],
                                      'wind.setup'), "rb") as f:
-                    ste.download_button(
+                    st.download_button(
                         "Download .setup file",
                         data=f,
+                        key=f"download_setup_{result_item['Model name']}",
                         file_name='wind.setup',
+                        width='stretch',
                     )
             with col4_:
                 pass
@@ -274,6 +277,42 @@ def fetch_data(index_name,
         st.error(f"Error fetching data from Elasticsearch: {e}")
         return []
 
+def download_model_list(data):
+    '''
+    Download the list of models as a CSV file
+    '''
+    import pandas as pd
+    import streamlit as st
+    import io
+
+    try:
+        df = pd.DataFrame(data)
+        csv_buffer = io.StringIO()
+        df.to_csv(csv_buffer, index=False)
+        csv_data = csv_buffer.getvalue()
+
+        marg_l, col1_, marg_r = st.columns([2, 1,1])
+        with marg_l:
+            pass
+        with col1_:
+            st.download_button(
+                label="All parameters",
+                data=csv_data,
+                file_name='model_list.csv',
+                mime='text/csv',
+                width='stretch',
+            )
+            st.download_button(
+                label="Only model names",
+                data=df['Model name'].to_csv(index=False),
+                file_name='model_names.csv',
+                mime='text/csv',
+                width='stretch',
+            )
+        with marg_r:
+            pass
+    except Exception as e:
+        st.error(f"Error generating CSV for download: {e}")
 
 def scatterplot(data, x, y, size, color, hover_name, opacity,
                 color_continuous_scale):
