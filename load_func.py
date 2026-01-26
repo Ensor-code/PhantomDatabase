@@ -96,7 +96,7 @@ def query_document(client, index: str, query: str) -> str:
         id: id of the document in the index, None if the document does not exist
  """
     from elasticsearch import Elasticsearch
-    response = client.search(index=index, query={"match": {"Model name": {"query": query}}})
+    response = client.search(index=index, query={"match": {"model_name": {"query": query}}})
     if len(response["hits"]["hits"]) > 0:
         id = response["hits"]["hits"][0]["_id"]
     else:
@@ -125,8 +125,7 @@ def LoadDoc(directory: str, model, prefix: str, index_definition) -> Dict[str, A
         print(model)
         return {}
     # create mappings for the model 
-    modelData = {"Model name": model,
-                 "path to folder": directory,
+    modelData = {"model_name": model,
                  "Publication": "Unpublished"}   
     
     # get data from the .setup file
@@ -311,29 +310,29 @@ def LoadHeaderData(directory: str, index_definition) -> Dict[str, Any]:
                     label = 'version'
                     # get date and reformat it
                     date = line.strip().split()[2].split("/")
-                    header['model date'] = date[2] + "-" + date[1] + "-" + date[0]
+                    header['model_date'] = date[2] + "-" + date[1] + "-" + date[0]
                 elif line.startswith("ST"):
                     value = line.strip().split()[0]
                     value = value.strip("ST:")
                     label = 'version'
                     # get date and reformat it
                     date = line.strip().split()[2].split("/")
-                    header['model date'] = date[2] + "-" + date[1] + "-" + date[0]
+                    header['model_date'] = date[2] + "-" + date[1] + "-" + date[0]
 
                 else:
                     # Get labels and values
                     label, value = line.strip().split()
                     # special cases where fields are not named as in the index
                     if 'nparttot' in label:
-                        label = 'resolution (current)'
+                        label = 'resolution(current)'
                     if 'massoftype' in label \
                         and float(value) != 0.0 \
-                        and 'particle mass' not in header:
+                        and 'particle_mass' not in header:
                         # there are multiple fields in header for particle mass,
                         # so only store the first one.
                         # Needs to be refined if we ever use different types
                         # of particles in the same simulation.
-                        label = 'particle mass'
+                        label = 'particle_mass'
 
                 # Store variable with the type defined in the index
                 if label in index_definition["mappings"]["properties"]:
@@ -382,15 +381,15 @@ def LoadEvData(directory: str, prefix: str) -> Dict[str, Any]:
         print("ERROR: %s No valid wind*.ev files found!" % directory)
         sys.exit()
 
-    with open(os.path.join(directory, max_file), "r") as data:
+    with open(os.path.join(directory, max_file), "rb") as data:
         # everything we need is in the last line
         cu_to_yr = 0.15916423881616068 # according to splash units (code units are set such that G=1)
         # only grab the last line of the file (the .ev file can be very large, so we avoid reading everything into memory)
-        data.seek(-2, 2)  # Move the cursor to the second last byte
+        data.seek(-2, os.SEEK_END)  # Move the cursor to the second last byte
         while data.read(1) != b'\n':  # Move backward until finding a newline
-            data.seek(-2, 1)
+            data.seek(-2, os.SEEK_CUR)
         line = data.readline().decode()
-        ev['simulation time'] = float(line.strip().split()[0]) * cu_to_yr   
+        ev['simulation_time'] = float(line.strip().split()[0]) * cu_to_yr   
     return ev
 
 
@@ -461,10 +460,10 @@ def CheckEntries(model:str, entries: dict):
     import sys
     err = 0
     # Mandatory fields
-    for key in ['version', 'model date', 
-                'path to folder', 'simulation time', 
-                'resolution (current)', 'particle mass', 
-                'ieos', 'Model name', 'isink_radiation']:
+    for key in ['version', 'model_date', 
+                'simulation_time', 
+                'resolution(current)', 'particle_mass', 
+                'ieos', 'model_name', 'isink_radiation']:
         if key not in entries:
                 print("%s : \n Entry %s not in model data, but required." % (model, key))
                 err = 1

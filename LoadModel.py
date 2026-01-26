@@ -31,6 +31,9 @@ INDEX_NAME = "wind"
 # indicate if you want to update existing documents
 UPDATE = True
 
+# indicate if you want to recreate the index
+RECREATE_INDEX = True
+
 # remove excessive HTTPS request warnings
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -68,8 +71,15 @@ index_definition = {
 }
 
 # Create the index using the parameters set above.
+print(" - Creating index...")
 if client.indices.exists(index=INDEX_NAME):
-    print("     ... Index already exists, delete it if you want to recreate it")
+    if RECREATE_INDEX:
+        print(" - Deleting existing index...")
+        client.indices.delete(index=INDEX_NAME)
+        print(" - Creating new index...")
+        client.indices.create(index=INDEX_NAME, body=index_definition)
+    else:
+        print("     ... Index already exists, delete it if you want to recreate it")
 else:
     client.indices.create(index=INDEX_NAME, body=index_definition)
 
@@ -85,9 +95,7 @@ for model in MODELS:
     base_command = {"_index": INDEX_NAME, "_op_type": "index"}
     # check if document already exists
     count += 1
-    sys.stdout.write(f"\r     ... Progress: {count}/{len(MODELS)}")
-    sys.stdout.flush()
-    time.sleep(1)
+    print(f"\r     ... Progress: {count}/{len(MODELS)}")
     id = query_document(client, INDEX_NAME,model)
     # load data
     modelData = LoadDoc(DATA_DIR, model, PREFIX, index_definition)
