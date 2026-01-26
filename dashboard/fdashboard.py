@@ -217,11 +217,16 @@ def fetch_data(index_name,
 
         # Add manual query if needed
         if manual_query:
-            query_body["query"]["bool"]["must"].append(
-                {"query_string": {
-                    "query": manual_query,
-                    "default_field": "mass ratio"
-                }})
+            if "*" in manual_query or "?" in manual_query or '~' in manual_query:
+                manual_query = ''
+                st.error(f"Error fetching data from Elasticsearch: invalid characters in query (wildcards not allowed).")
+                return []
+            else:
+                query_body["query"]["bool"]["must"].append(
+                    {"query_string": {
+                        "query": manual_query,
+                        "default_field": "mass ratio"
+                    }})
 
         # Add binary ranges to query if needed
         if icompanion:
