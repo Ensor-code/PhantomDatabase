@@ -39,6 +39,8 @@ client = Elasticsearch("https://localhost:9200/",
 
 # CSV path to provide details on the index mappings
 csv_path = "/cosma/home/dr011/dc-land2/PhantomDatabase/metadata.csv"
+# model data directory
+model_dir = "/cosma/apps/dr011/dc-land2/database"
 
 # Directory of assets
 assets_dir = os.path.join(os.path.abspath(os.getcwd()), "assets")
@@ -51,7 +53,7 @@ dlabels = {
     "semi_major_axis": "Semi-major axis (AU)",
     "period": "Orbital period (yr)",
     "icompanion_star": "Number of companions",
-    "Model name": "Model name",
+    "model_name": "model_name",
     "wind_mass_rate": "Mass loss rate (M_sun/yr)",
     "wind_terminal_velocity": "Wind terminal velocity (km/s)",
 }
@@ -218,7 +220,7 @@ with search:
     st.write('''The parameters selected in the sidebar will also be used for the query.
                 Please restrain the search bar for queries on numeric fields. Queries on keywords (strings), e.g. publications, can be made 
                 with the selector box called :grey-background[Keyword filters]. Queries on model names are allowed, but only for exact matches;
-                wildcards and fuzzyness are not supported for performance and security reasons.''')   
+                regular expressions, wildcards and fuzzy queries are not supported for performance and security reasons.''')   
     st.write('''If you wish to cancel your search, just click on the :red-background[search] button with an empty query.''')
     st.write('''Details on the fields that can used for queries are displayed at the bottom of the page.''') 
 
@@ -249,7 +251,7 @@ with search:
         st.button("Select all Phantom versions", on_click=_select_all,width='stretch')
 
         # Publication selector
-        publications = db.get_field_values(selected_index, client, "Publication")
+        publications = db.get_field_values(selected_index, client, "publication")
         publication = st.multiselect("Publications",
             publications,publications,key='publication')
         def _select_all():
@@ -341,13 +343,13 @@ with list:
                 st.warning("The query returned no results!")
     with marg_r:
         pass
-    
+
     if st.session_state["dl"]:
         db.download_model_list(st.session_state['search_results'])
 
     # display model list if the box is checked
     if st.session_state['display']:
-        db.update_results(st.session_state['search_results'])
+        db.update_results(st.session_state['search_results'], selected_index, model_dir)
 
 with plots:
     st.header("Plots")
@@ -386,7 +388,7 @@ with plots:
             y="Mass ratio",
             z="Semi-major axis (AU)",
             color="Number of companions",
-            hover_data=["Model name"],
+            hover_data=["model_name"],
             title="Mass ratio vs. Eccentricity axis vs. Semi-major axis",
             color_discrete_sequence=px.colors.qualitative.Safe,
             opacity=0.7,
@@ -400,7 +402,7 @@ with plots:
             y="Mass ratio",
             z="Orbital period (yr)",
             color="Number of companions",
-            hover_data=["Model name"],
+            hover_data=["model_name"],
             title="Mass ratio vs. Eccentricity axis vs. Orbital period",
             color_discrete_sequence=px.colors.qualitative.Safe,
             opacity=0.7,
@@ -416,7 +418,7 @@ with plots:
             x="Wind terminal velocity (km/s)",
             y="Mass loss rate (M_sun/yr)",
             color="Number of companions",
-            hover_data=["Model name"],
+            hover_data=["model_name"],
             title="Wind terminal velocity vs. Wind mass loss rate",
             color_discrete_sequence=px.colors.qualitative.Safe,
             opacity=0.7,
@@ -424,40 +426,40 @@ with plots:
         st.plotly_chart(fig)
 
     # circle plots
-    st.write("### Model counts")
+    st.write("### model_counts")
     col1_, col2_ = st.columns(2)
     count_df = data.groupby(["Eccentricity", "Mass ratio"
-                             ])["Model name"].count().reset_index()
+                             ])["model_name"].count().reset_index()
     if count_df.empty:
         st.write("No data to display")
     else:
         with col1_:
             # Eccentricity vs Mass ratio
-            count_df.rename(columns={"Model name": "Model count"},
+            count_df.rename(columns={"model_name": "model_count"},
                             inplace=True)
             # make scatter plot
             fig = db.scatterplot(count_df,
                                  x="Eccentricity",
                                  y="Mass ratio",
-                                 size="Model count",
-                                 color="Model count",
-                                 hover_name="Model count",
+                                 size="model_count",
+                                 color="model_count",
+                                 hover_name="model_count",
                                  opacity=0.7,
                                  color_continuous_scale='Turbo')
             st.plotly_chart(fig)
 
             # Semi-major axis vs Mass ratio
             count_df = data.groupby(["Semi-major axis (AU)", "Mass ratio"
-                                     ])["Model name"].count().reset_index()
-            count_df.rename(columns={"Model name": "Model count"},
+                                     ])["model_name"].count().reset_index()
+            count_df.rename(columns={"model_name": "model_count"},
                             inplace=True)
             # make scatter plot
             fig = db.scatterplot(count_df,
                                  x="Semi-major axis (AU)",
                                  y="Mass ratio",
-                                 size="Model count",
-                                 color="Model count",
-                                 hover_name="Model count",
+                                 size="model_count",
+                                 color="model_count",
+                                 hover_name="model_count",
                                  opacity=0.7,
                                  color_continuous_scale='Turbo')
             st.plotly_chart(fig)
@@ -465,17 +467,17 @@ with plots:
         with col2_:
             # Eccentricity vs Semi-major axis
             count_df = data.groupby(["Eccentricity", "Semi-major axis (AU)"
-                                     ])["Model name"].count().reset_index()
-            count_df.rename(columns={"Model name": "Model count"},
+                                     ])["model_name"].count().reset_index()
+            count_df.rename(columns={"model_name": "model_count"},
                             inplace=True)
 
             # make scatter plot
             fig = db.scatterplot(count_df,
                                  x="Eccentricity",
                                  y="Semi-major axis (AU)",
-                                 size="Model count",
-                                 color="Model count",
-                                 hover_name="Model count",
+                                 size="model_count",
+                                 color="model_count",
+                                 hover_name="model_count",
                                  opacity=0.7,
                                  color_continuous_scale='Turbo')
             st.plotly_chart(fig)
@@ -483,10 +485,10 @@ with plots:
             # make 3d scatter plot
             count_df = data.groupby(
                 ["Eccentricity", "Mass ratio",
-                 "Semi-major axis (AU)"])["Model name"].count().reset_index()
-            count_df.rename(columns={"Model name": "Model count"},
+                 "Semi-major axis (AU)"])["model_name"].count().reset_index()
+            count_df.rename(columns={"model_name": "model_count"},
                             inplace=True)
-            count_df["bubble size"] = (np.sqrt(count_df['Model count']))
+            count_df["bubble size"] = (np.sqrt(count_df['model_count']))
             sizeref = 2. * max(count_df['bubble size']) / (1000)
 
             fig = px.scatter_3d(
@@ -495,7 +497,7 @@ with plots:
                 y="Semi-major axis (AU)",
                 z="Mass ratio",
                 size="bubble size",
-                color="Model count",
+                color="model_count",
                 title="Eccentricity vs. Semi-major axis vs. Mass ratio",
                 color_continuous_scale='Turbo',
                 opacity=0.7,
