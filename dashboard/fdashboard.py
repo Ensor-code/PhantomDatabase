@@ -12,7 +12,7 @@ def fetch_recent_data(index_name, client, size=1000):
             "size": size,
             "sort": [
                 {
-                    "model date": {
+                    "model_date": {
                         "order": "desc"
                     }
                 },  # Primary sort by date
@@ -63,7 +63,7 @@ def get_range(index_name, client, field) -> tuple:
     return min, max
 
 
-def update_results(results):
+def update_results(results, index_name, model_dir):
     '''
     Update the results of the search and display them in a list
     '''
@@ -72,7 +72,8 @@ def update_results(results):
     try:
         for result_item in results:
             # Display document
-            st.markdown(f"##### {result_item['Model name']}")
+            st.markdown(f"##### {result_item['model_name']}")
+            model_path = os.path.join(model_dir, index_name, result_item['model_name'])
             # Details arranged in columns
             col1_, col2_, col3_ = st.columns([1, 1, 1])
             # search button
@@ -123,7 +124,7 @@ def update_results(results):
                 else:
                     st.markdown(f"Published in {result_item['Publication']}")
                 # timestamp
-                timestamp = result_item.get('model date', '')
+                timestamp = result_item.get('model_date', '')
                 if timestamp:
                     st.write(f"ran on {timestamp}")
 
@@ -133,7 +134,7 @@ def update_results(results):
                     unsafe_allow_html=True)
                 try:
                     st.image(
-                        os.path.join(result_item['path to folder'],
+                        os.path.join(model_path,
                                      "orbital.png"))
                 except:
                     st.markdown(
@@ -144,7 +145,7 @@ def update_results(results):
                             unsafe_allow_html=True)
                 try:
                     st.image(
-                        os.path.join(result_item['path to folder'],
+                        os.path.join(model_path,
                                      "meridional.png"))
                 except:
                     st.markdown(f" <p align=center> snapshot not available </p>",
@@ -154,24 +155,24 @@ def update_results(results):
                 pass
             with col2_:
                 with open(
-                        os.path.join(result_item['path to folder'], 'wind.in'),
+                        os.path.join(model_path, 'wind.in'),
                         "rb") as f:
                     # regular dl buttons refresh the state of the page so we use streamlit_ext buttons
                     st.download_button(
                         "Download .in file",
                         data=f,
-                        key=f"download_in_{result_item['Model name']}",
+                        key=f"download_in_{result_item['model_name']}",
                         file_name='wind.in',
                         width='stretch',
                     )
             with col3_:
                 with open(
-                        os.path.join(result_item['path to folder'],
+                        os.path.join(model_path,
                                      'wind.setup'), "rb") as f:
                     st.download_button(
                         "Download .setup file",
                         data=f,
-                        key=f"download_setup_{result_item['Model name']}",
+                        key=f"download_setup_{result_item['model_name']}",
                         file_name='wind.setup',
                         width='stretch',
                     )
@@ -221,6 +222,9 @@ def fetch_data(index_name,
                 manual_query = ''
                 st.error(f"Error fetching data from Elasticsearch: invalid characters in query (wildcards not allowed).")
                 return []
+            if "/" in manual_query or "^" in manual_query or "$" in manual_query or "[a-z0-9]" in manual_query:
+                manual_query = ''
+                st.error(f"Error fetching data from Elasticsearch: invalid characters in query (regex not allowed).")
             else:
                 query_body["query"]["bool"]["must"].append(
                     {"query_string": {
@@ -309,7 +313,7 @@ def download_model_list(data):
             )
             st.download_button(
                 label="Only model names",
-                data=df['Model name'].to_csv(index=False),
+                data=df['model_name'].to_csv(index=False),
                 file_name='model_names.csv',
                 mime='text/csv',
                 width='stretch',
