@@ -25,6 +25,8 @@ st.set_page_config(page_title="Test Dashboard",
                    layout="wide",
                    initial_sidebar_state="expanded"
                    )
+# only show error type to users, hide traceback details
+st.set_option("client.showErrorDetails", "type")
 
 alt.theme.enable("dark")
 
@@ -213,12 +215,12 @@ with search:
              you can add your own query using the search bar below. Your results can then be dispayed in the "List" tab.''')
     st.write('''To query models, first fill in the search bar with the parameters values/ranges you are looking for, and complete using the keyword
              filters below if needed. Then click on the :red-background[search] button to run the query.''')
-    st.write('''The parameters selected in the sidebar will also be used for the query.''')
-    st.write('''Details on the fields that can used for queries are displayed at the bottom of the page.''')
-    st.write('''Please note that the search bar is for queries on numeric fields only. For queries on keywords (strings), e.g., publications, please use the selectors in the sidebar.''')
+    st.write('''The parameters selected in the sidebar will also be used for the query.
+                Please restrain the search bar for queries on numeric fields. Queries on keywords (strings), e.g. publications, can be made 
+                with the selector box called :grey-background[Keyword filters]. Queries on model names are allowed, but only for exact matches;
+                wildcards and fuzzyness are not supported for performance and security reasons.''')   
     st.write('''If you wish to cancel your search, just click on the :red-background[search] button with an empty query.''')
-
-
+    st.write('''Details on the fields that can used for queries are displayed at the bottom of the page.''') 
 
     st.markdown("---")
     # search bar
