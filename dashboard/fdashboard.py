@@ -1,7 +1,7 @@
 " Functions used in dashboard.py "
 
 
-def fetch_recent_data(index_name, client, size=1000):
+def fetch_recent_data(index_name, client, size=1000, include_unpublished=False):
     """
     Fetch recent data from Elasticsearch using no extra filters
     """
@@ -18,6 +18,11 @@ def fetch_recent_data(index_name, client, size=1000):
                 },  # Primary sort by date
             ]
         }
+        
+        if not include_unpublished:
+            query_body["query"] = {
+                "bool": {"must_not": {"term": {"publication": "Unpublished"}}}
+            }
 
         response = client.search(index=index_name, body=query_body)
         return [hit['_source'] for hit in response['hits']['hits']]
@@ -119,10 +124,10 @@ def update_results(results, index_name, model_dir):
                 except:
                     st.write(" Wind terminal velocity: Not available")
                 st.markdown(f" Wind mass loss rate: {result_item['wind_mass_rate']} Msun/yr")
-                if "Unpublished" in result_item['Publication']:
+                if "Unpublished" in result_item['publication']:
                     st.markdown(f"Unpublished")
                 else:
-                    st.markdown(f"Published in {result_item['Publication']}")
+                    st.markdown(f"Published in {result_item['publication']}")
                 # timestamp
                 timestamp = result_item.get('model_date', '')
                 if timestamp:
@@ -205,6 +210,7 @@ def fetch_data(index_name,
                period,
                icompanion,
                publication,
+               version,
                size=10000):
     '''
     Fetch data from Elasticsearch based on an optional search query, and ranges and filters applied
@@ -274,9 +280,14 @@ def fetch_data(index_name,
         if publication:
                 query_body["query"]["bool"]["filter"].append(
                     {"terms": {
-                        'Publication': publication
+                        'publication': publication
                     }})
-
+        if version:
+                query_body["query"]["bool"]["filter"].append(
+                    {"terms": {
+                        'version': version
+                    }})
+    
         # Query
         result = client.search(index=index_name, body=query_body)
 

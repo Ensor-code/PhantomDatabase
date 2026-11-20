@@ -31,7 +31,7 @@ st.set_option("client.showErrorDetails", "type")
 alt.theme.enable("dark")
 
 load_dotenv()
-# for now it uses my api key, but eventually I'll create one just for the dashboar
+# for now it uses my api key, but eventually I'll create one just for the dashboard
 client = Elasticsearch("https://localhost:9200/",
                        api_key=os.getenv('API_KEY'),
                        verify_certs=False,
@@ -149,10 +149,10 @@ with home:
         st.write('''  This is a database of 3D hydrodynamics models of winds around AGB stars in single and multiple systems.
                 These models were computed using the Phantom code (Price et al. 2018, https://phantomsph.github.io/), an SPH code, and their aim is to study the interaction 
                 of stellar winds with one or more companions.''')
-        st.write('''To use this tool, please select the :grey-background[Database index] you want to query in the sidebar on the left. Then adjust the parameters ranges and filters to your needs.
+        st.write('''To use this tool, please select the :grey-background[Database index] (i.e. the type of model) you want to query in the sidebar on the left. Then adjust the parameters ranges and filters to your needs.
                 For more specific queries, you can switch to the :grey-background[Search] tab, more details are given there. The result of the query will be displayed in the :grey-background[List] tab, in the form
                 of a model list, along with their parameters and snapshots of the simulations.''')
-        st.write('''The plots tab contains some useful plots to explore the parameter space of our dataset. The data shown there is 
+        st.write('''The :grey-background[plots tab] contains some useful plots to explore the parameter space of our dataset. The data shown there is 
                 affected by the ranges and filters selected in the sidebar and the search bar.''')
     with col2_:
         st.image(os.path.join(assets_dir,
@@ -221,12 +221,12 @@ with search:
                 Please restrain the search bar for queries on numeric fields. Queries on keywords (strings), e.g. publications, can be made 
                 with the selector box called :grey-background[Keyword filters]. Queries on model names are allowed, but only for exact matches;
                 regular expressions, wildcards and fuzzy queries are not supported for performance and security reasons.''')   
-    st.write('''If you wish to cancel your search, just click on the :red-background[search] button with an empty query.''')
+    st.write('''If you wish to reset your search, just empty the search field and then click on the :red-background[search] button with an empty query.''')
     st.write('''Details on the fields that can used for queries are displayed at the bottom of the page.''') 
 
     st.markdown("---")
     # search bar
-    manual_query = st.text_input("Query", key="manual_query")
+    manual_query = st.text_input("Query", key="manual_query", placeholder="e.g. mass_ratio:>1", type="search")
     # add details on the query syntax
     st.write('''The search bar is for queries on numeric variables, and should be made with the following syntax:  
              - The field name followed by a colon, then the value you are looking for.   
@@ -240,7 +240,8 @@ with search:
 
 
     # Keyword selectors
-    st.write("For queries on keyword fields, please use the selectors below.")
+    st.write('''For queries on keyword fields, please use the selectors below.''')
+    st.write('''Note: By default, only published models are queried. If you wish to include unpublished ones, add the :red-background[Unpublished] field in the Publications filters below.''')
     with st.popover("Keyword filters"):
         # Version selector
         versions = db.get_field_values(selected_index, client, "version")
@@ -252,13 +253,14 @@ with search:
 
         # Publication selector
         publications = db.get_field_values(selected_index, client, "publication")
+        published = [p for p in publications if p != "Unpublished"]
         publication = st.multiselect("Publications",
-            publications,publications,key='publication')
+            publications,published,key='publication')
         def _select_all():
             st.session_state.publication = publications
         st.button("Select all published and non-published work", on_click=_select_all,width='stretch')
 
-    col1_, col2_, col3_ = st.columns((2*page_width/6, page_width/6,  2*page_width/6))
+    col1_, col2_, col3_ = st.columns((2*page_width/5, page_width/5,  2*page_width/5))
     with col1_:
         pass
     with col3_:
@@ -267,7 +269,7 @@ with search:
         if st.button("Search", type='primary', width='stretch'):
             st.session_state['search_results'] = db.fetch_data(
                 selected_index,  client, manual_query, eccentricity, massratio, sma, period,
-                icompanion, publication)
+                icompanion, publication, version)
 
     st.markdown("---")
     st.markdown("### Field details")
@@ -295,7 +297,7 @@ with col2_:
     if col2_.button("Apply",width='stretch'):
         st.session_state['search_results'] = db.fetch_data(
             selected_index, client, manual_query, eccentricity, massratio, sma, period,
-            icompanion, publication)
+            icompanion, publication, version)
         on_click = st.session_state["display"] = False
         on_click = st.session_state["dl"] = False
 with col3_:
