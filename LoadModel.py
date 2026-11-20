@@ -136,12 +136,12 @@ models, _ = read_csv(FILE_PATH)
 for m in models:
     q = {
         "script": {
-            "source": f"ctx._source.Publication='{m[1]}'",  # update publication field
+            "source": f"ctx._source.publication='{m[1]}'",  # update publication field
             "lang": "painless"
         },
         "query": {
             "match": {
-                'Model name': m[0]
+                'model_name': m[0]
             }
         }
     }
