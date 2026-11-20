@@ -160,11 +160,20 @@ with home:
 
 st.markdown("---")
 st.write('''##### Publications   
-The models accessible in this database are described in the following publications:  
+By default, only models that have been published are displayed. If you wish to see our collection of unpublished models, you can enable the :red-background[Unpublished] filter in the :grey-background[search] tab.
+Unpublished models come with no guaranteed quality checks, we thus ask users to be cautious when using them and contact us to ensure of their validity.
+
+The published models in this database are described used in the following publications:  
 - SPH modelling of AGB wind morphology in hierarchical triple systems and a comparison to observation of R Aql, Malfait et al., 2024, Astronomy & Astrophysics, Volume 691, id.A57, 17 pp.  
 - Impact of H I cooling and study of accretion disks in asymptotic giant branch wind-companion smoothed particle hydrodynamic simulations, Malfait et al., 2024, Astronomy & Astrophysics, Volume 691, id.A84, 20 pp.  
 - SPH modelling of companion-perturbed AGB outflows including a new morphology classification scheme, Maes et al., 2021, Astronomy & Astrophysics, Volume 653, id.A25, 18 pp.  
 - SPH modelling of wind-companion interactions in eccentric AGB binary systems Malfait et al., 2021, Astronomy & Astrophysics, Volume 652, id.A51, 21 pp.  
+
+We kindly ask users to cite the relevant publication(s) when using models in their own work, and acknowledge this database.
+
+Further details on the models and their numerical implementationcan be found in the respective publications and the following papers:
+- 3D simulations of AGB stellar winds: I. Steady winds and dust formation Siess, L., Homan, W., Toupin, S. & Price, D. J. A&A 667, A75 (2022).
+- 3D simulations of AGB stellar winds -- II. Ray-tracer implementation and impact of radiation on the outflow morphology,Esseldeurs, M. et al. A&A 674, A122 (2023).
          ''')
 
 
