@@ -60,4 +60,3 @@ kappa_gas,float,0,cm�/g,.in,#,constant gas opacity
 bowen_kmax,float,0,cm�/g,.in,#,maximum dust opacity
 bowen_Tcond,float,0,K,.in,#,dust condensation temperature
 bowen_delta,float,0,K,.in,#,condensation temperature range
-
