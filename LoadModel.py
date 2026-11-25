@@ -128,29 +128,3 @@ print(" - Uploading documents...")
 helpers.bulk(client, operations, refresh=True)
 print("     ... Upload complete!")
 
-# Update the publication status of the Documents
-# get list of documents to udpate
-print(" - Filling in the publication fields...")
-FILE_PATH = os.path.join(DIR_CURRENT, "publications.csv")
-models, _ = read_csv(FILE_PATH)
-
-# Query models then update the publication field
-for m in models:
-    q = {
-        "script": {
-            "source": f"ctx._source.publication='{m[1]}'",  # update publication field
-            "lang": "painless"
-        },
-        "query": {
-            "match": {
-                'model_name': m[0]
-            }
-        }
-    }
-    try :
-        client.update_by_query(body=q, index='wind')
-    except Exception as e:
-        print(f"Failed to update {m[0]}: {e}")
-        continue
-print("     ... Publication fields updated!")
-

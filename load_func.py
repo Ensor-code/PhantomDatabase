@@ -115,7 +115,7 @@ def LoadDoc(directory: str, model, prefix: str, index_definition) -> Dict[str, A
         return {}
     # create mappings for the model 
     modelData = {"model_name": model,
-                 "publication": "Unpublished"}   
+                 "publication": model.split('_')[0]}   
     
     # get data from the .setup file
     print('loading setup data')
