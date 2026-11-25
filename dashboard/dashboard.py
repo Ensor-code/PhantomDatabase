@@ -1,4 +1,6 @@
-""" test of streamlit dahsboard"""
+"""
+streamlit dahsboard for wind models
+"""
 
 import os
 from datetime import datetime
@@ -143,9 +145,11 @@ home, search, list, plots = st.tabs(["Home", "Search", "List", "Plots"])
 
 
 with home:
-    st.header("Welcome!")
-    col1_, col2_ = st.columns((2*page_width/3, page_width/3))
-    with col1_:
+    col1_, col2_, col3_, col4_ = st.columns((page_width/10,2*page_width/6, page_width/6,page_width/10))
+    with col2_:
+        st.header("Welcome!", text_alignment="center")
+    col1_, col2_, col3_, col4_ = st.columns((page_width/10,2*page_width/6, page_width/6,page_width/10))
+    with col2_:
         st.write('''  This is a database of 3D hydrodynamics models of winds around AGB stars in single and multiple systems.
                 These models were computed using the Phantom code (Price et al. 2018, https://phantomsph.github.io/), an SPH code, and their aim is to study the interaction 
                 of stellar winds with one or more companions.''')
@@ -154,7 +158,9 @@ with home:
                 of a model list, along with their parameters and snapshots of the simulations.''')
         st.write('''The :grey-background[plots tab] contains some useful plots to explore the parameter space of our dataset. The data shown there is 
                 affected by the ranges and filters selected in the sidebar and the search bar.''')
-    with col2_:
+        st.write('''If you are looking for a model that isn't listed here, please contact us. We may have it stored elsewhere, and otherwise we'd be happy to run new simulations that fit the parameters you need.''')
+        st.write('''Happy browsing!✨''')
+    with col3_:
         st.image(os.path.join(assets_dir,
                             "orbital.png"))
 
@@ -184,10 +190,8 @@ with col1_:
 A large fraction of the models stored in this database are part of an effort to characterise the morphology of AGB winds carried by the ALMA large program ATOMIUM (https://astro-atomium.github.io/).''')
     st.write(''' This database was built in collaboration with DiRAC and the Cosma Supercomputer at Durham University, UK. It uses Elasticsearch to manage the data and queries, and streamlit to display it.
 The plots showed are made using plotly, Altair (VanderPlas et al. 2018), pandas (McKinney 2010), and NumPy (Harris et al. 2020).''')
-    st.write(''' This work is supported by the KU Leuven C1 excellence grant BRAVE C16/23/009.''')
-    marg_l, imcol1_, imcol2_, imcol3_, marg_r = st.columns(5)
-    with marg_l:
-        pass
+    st.write(''' This work is supported by the KU Leuven C1 excellence grant BRAVE C16/23/009 and Long term structural funding - Methusalem funding by the Flemish Government (project SOUL, METH/24/012) at KU Leuven.''')
+    marg_l, imcol1_, imcol2_, imcol3_, imcol4_, marg_r = st.columns(6)
     with imcol1_:
         st.image(os.path.join(assets_dir,
                         "Atomium.png"), width='stretch')
@@ -197,8 +201,9 @@ The plots showed are made using plotly, Altair (VanderPlas et al. 2018), pandas 
     with imcol3_:
         st.image(os.path.join(assets_dir,
                         "BRAVE.png"), width='stretch')
-    with marg_r:
-        pass
+    with imcol4_:
+        st.image(os.path.join(assets_dir,
+                        "SOUL.png"), width='stretch')
 
 with col2_:
     st.write('''##### Database administrator:  
@@ -208,6 +213,7 @@ Contact: camille.landri@kuleuven.be''')
     st.write('''##### Database contributors (in alphabetical order):  
 - Taïssa Danilovich, Monash University, Australia  
 - Davide Dionese, Université Libre de Bruxelles, Belgium  
+- Leen Decin, KU Leuven, Belgium
 - Mats Esseldeurs, KU Leuven, Belgium  
 - Marcus Keil, University College London, UK  
 - Jolien Malfait, previously KU Leuven, Belgium
@@ -231,7 +237,8 @@ with search:
                 Please restrain the search bar for queries on numeric fields. Queries on keywords (strings), e.g. publications, can be made 
                 with the selector box called :grey-background[Keyword filters]. Queries on model names are allowed, but only for exact matches;
                 regular expressions, wildcards and fuzzy queries are not supported for performance and security reasons.''')   
-    st.write('''If you wish to reset your search, just empty the search field and then click on the :red-background[search] button with an empty query.''')
+    st.write('''If you wish to reset your search, just empty the search field and then click on the :red-background[search] button with an empty query.
+            (Note that this will not reset the ranges selected in the sidebar, only the search bar. If you wish to reset everything, you can reload the page.)''')
     st.write('''Details on the fields that can used for queries are displayed at the bottom of the page.''') 
 
     st.markdown("---")
@@ -270,10 +277,6 @@ with search:
         st.button("Select all published and non-published work", on_click=_select_all,width='stretch')
 
     col1_, col2_, col3_ = st.columns((2*page_width/5, page_width/5,  2*page_width/5))
-    with col1_:
-        pass
-    with col3_:
-        pass
     with col2_:
         if st.button("Search", type='primary', width='stretch'):
             st.session_state['search_results'] = db.fetch_data(
@@ -300,8 +303,6 @@ with search:
 
 # search button in the sidebar
 col1_, col2_, col3_ = st.sidebar.columns([1, 2, 1])
-with col1_:
-    pass
 with col2_:
     if col2_.button("Apply",width='stretch'):
         st.session_state['search_results'] = db.fetch_data(
@@ -309,8 +310,6 @@ with col2_:
             icompanion, publication, version)
         on_click = st.session_state["display"] = False
         on_click = st.session_state["dl"] = False
-with col3_:
-    pass
 
 with list:
     st.header("List of models")
@@ -328,8 +327,6 @@ with list:
 
     # show models buttons
     marg_l, col1_, col2_, marg_r = st.columns([1, 1,1,1])
-    with marg_l:
-        pass
     with col1_:
         if st.button(
             "Show/hide models",
@@ -352,8 +349,6 @@ with list:
                     on_click = st.session_state["dl"] = False
             else:
                 st.warning("The query returned no results!")
-    with marg_r:
-        pass
 
     if st.session_state["dl"]:
         db.download_model_list(st.session_state['search_results'])
