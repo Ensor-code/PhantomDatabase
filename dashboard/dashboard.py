@@ -161,7 +161,7 @@ with home:
 st.markdown("---")
 st.write('''##### Publications   
 
-The published models in this database are described used in the following publications:  
+The models available in this database are all described in the following publications:  
 - Eppur si eclissa: Eccentric low-mass companions and time-in-dust selection to explain long secondary periods, Decin, L. et al., Astronomy and Astrophysics 703, L23 (2025).
 - SPH modelling of AGB wind morphology in hierarchical triple systems and a comparison to observation of R Aql, Malfait et al., 2024, Astronomy & Astrophysics, Volume 691, id.A57, 17 pp.  
 - Impact of H I cooling and study of accretion disks in asymptotic giant branch wind-companion smoothed particle hydrodynamic simulations, Malfait et al., 2024, Astronomy & Astrophysics, Volume 691, id.A84, 20 pp.  
