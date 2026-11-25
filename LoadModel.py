@@ -15,18 +15,17 @@ from elasticsearch import RequestError
 from load_func import *
 
 # Directories of models to load
-DATA_DIR = "/cosma/apps/dr011/dc-land2/database/wind"   # Careful, this is a local path - change it to your own
-PREFIX = "wind"    
+DATA_DIR = "/cosma/home/dr011/dc-land2/apps/database/wind_inject"   # Careful, this is a local path - change it to your own
+PREFIX = "wind"
 
 # Directory of scripts
 DIR_CURRENT = os.getcwd()
 
 # model list file
-LIST = "/cosma/home/dr011/dc-land2/PhantomDatabase/model_list.txt"
-MODELS = read_model_list(LIST)
+MODELS = os.listdir(DATA_DIR)
 
 # elastic search index name
-INDEX_NAME = "wind"
+INDEX_NAME = "wind_inject"
 
 # indicate if you want to update existing documents
 UPDATE = True
@@ -55,7 +54,6 @@ print("     ... Connected!")
 # grab mappings list from the csv file, which should be in the same directory as the script
 CSV_PATH = os.path.join(DIR_CURRENT, "metadata.csv")
 data, header = read_csv(CSV_PATH)
-
 
 # create the dictionnary of mappings
 print(" - Creating index mappings...")
@@ -90,7 +88,7 @@ operations = []
 count = 0
 update_count = 0
 skip_count = 0
-err_count = 0
+err_count = []
 for model in MODELS:
     base_command = {"_index": INDEX_NAME, "_op_type": "index"}
     # check if document already exists
@@ -100,7 +98,7 @@ for model in MODELS:
     # load data
     modelData = LoadDoc(DATA_DIR, model, PREFIX, index_definition)
     if modelData == {}:
-        err_count += 1
+        err_count.append(model)
         continue
     # check if existing document should be updated
     if id and UPDATE:
@@ -112,14 +110,18 @@ for model in MODELS:
         continue
     # check that all the entries are correctly filled
     if CheckEntries(model,modelData) == 1:
-        err_count += 1
+        err_count.append(model)
         continue
     operations.append((base_command | {"_source": modelData}))
 
 if UPDATE and update_count>0 : print(f'\r     ... {update_count}/{len(MODELS)} documents already exist and will be updated.')
 elif skip_count>0: print(f'\r     ... {skip_count}/{len(MODELS)} documents already exist and will be skipped.')
-if err_count>0 : print(f'\r     ... {err_count}/{len(MODELS)} documents could not be loaded due to errors.')
+if len(err_count)>0 : 
+    print(f'\r     ... {len(err_count)}/{len(MODELS)} documents could not be loaded due to errors.')
+    for m in err_count:
+        print(m)
 else: print(f'\r     ... All {len(MODELS)} documents will be uploaded.')
+
 
 # Upload the documents
 print(" - Uploading documents...")

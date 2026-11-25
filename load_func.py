@@ -72,18 +72,7 @@ def create_mapping(data: list, header: list) -> Dict[str, Any]:
         if meta:
             data_dict[item[0]]["meta"] = meta
     return data_dict
- 
-def read_model_list(file) -> list:
-    """Read a file containing a list of models
-    Args:
-        file: path to file containing the list of models
-        Returns:
-        List of strings containing the names of the models
-    """
-    with open(file) as f:
-        models = f.readlines()
-    models = [x.strip() for x in models]
-    return models
+
 
 def query_document(client, index: str, query: str) -> str:
     """Query the elastic search index to find if the document exists, get the document id if so.
@@ -505,7 +494,8 @@ def CheckEntries(model:str, entries: dict):
             if key not in entries:
                 print("%s : \n Entry %s not in modelData, but required by wind" % (model, key))
                 err = 1
-    
+
+    # Check cooling parameters
     if entries['icooling'] != 0:
         # Check that cooling parameters are all filled
         for key in ['icool_method', 'excitation_HI','Tfloor']:
@@ -513,11 +503,23 @@ def CheckEntries(model:str, entries: dict):
                 print("%s : \n, Entry %s not in modelData, but required by cooling" % (model, key))
                 err = 1
 
-    if entries['idust_opacity'] != 0:
-        # Check that dust parameters are all filled - placeholder
+    # Check dust opacity
+    if entries['idust_opacity'] == 1:
+        for key in ['kappa_gas', 'bowen_kmax', 'bowen_Tcond', 'bowen_delta']:
+            if key not in entries:
+                print("%s : \n Entry %s not in modelData, but required by dust opacity scheme" % (model, key))
+                err = 1
+
+    # Check sink radiation parameters
+    if entries['isink_radiation'] == 1:
+        for key in ['alpha_rad']:
+            if key not in entries:
+                print("%s : \n Entry %s not in modelData, but required by sink radiation" % (model, key))
+                err = 1
+    elif entries['isink_radiation'] == 2:
         for key in ['iget_tdust']:
             if key not in entries:
-                print("%s : \n Entry %s not in modelData, but required by dust" % (model, key))
+                print("%s : \n Entry %s not in modelData, but required by sink radiation" % (model, key))
                 err = 1
 
     return err
