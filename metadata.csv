@@ -55,3 +55,9 @@ iget_tdust,integer,0,0,.in,#,0
 alpha_rad,float,0,0,.in,#,Fraction of the gravitational acceleration imparted to the gas
 0,0,0,0,0,#,0
 f_acc,float,0,0,.in,#,Particles < f_acc*h_acc accreted without checks
+0,0,0,0,0,#,0
+kappa_gas,float,0,cm�/g,.in,#,constant gas opacity
+bowen_kmax,float,0,cm�/g,.in,#,maximum dust opacity
+bowen_Tcond,float,0,K,.in,#,dust condensation temperature
+bowen_delta,float,0,K,.in,#,condensation temperature range
+
